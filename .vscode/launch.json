@@ -1,0 +1,29 @@
+{
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"type": "java",
+			"name": "Launch Main Class (w/ Assertions)",
+			"request": "launch",
+			"mainClass": "com.bee.App",
+			"projectName": "OSProject3",
+			"vmArgs": "-ea"
+		},
+		{
+			"type": "java",
+			"name": "Launch Main Class",
+			"request": "launch",
+			"mainClass": "com.bee.App",
+			"projectName": "OSProject3"
+		},
+		{
+			"type": "java",
+			"name": "Launch Main Class (w/ Assertions, reduced ST)",
+			"request": "launch",
+			"args": "500",
+			"mainClass": "com.bee.App",
+			"projectName": "OSProject3",
+			"vmArgs": "-ea"
+		}
+	]
+}
