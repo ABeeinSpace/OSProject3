@@ -46,4 +46,10 @@ public class MyScheduler {
     public LinkedBlockingQueue<Job> getIncomingQueue() {
         return incomingQueue;
     }
+
+    @Override
+    public String toString() {
+        return "MyScheduler [property=" + property + ", incomingQueue=" + incomingQueue + ", outgoingQueue="
+                + outgoingQueue + "]";
+    }
 }
