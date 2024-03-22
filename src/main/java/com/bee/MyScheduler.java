@@ -2,37 +2,54 @@ package com.bee;
 
 import java.util.concurrent.LinkedBlockingQueue;
 
-
 /*
  *
- * Models a thread-safe thread scheduler 
+ * Models a thread-safe, non-preemptive Scheduler.
  *
  * @author Aidan Border
- * @author Quade Leonard
+ * @author Austin Scheetz
  *
  */
 public class MyScheduler {
-    private int numJobs;
-    private String property;
-    private LinkedBlockingQueue<Job> incomingJobsQueue;
+    private String property; // The parameter we're measuring during this test run
+    private LinkedBlockingQueue<Job> incomingQueue; // The queue of jobs that the scheduler needs to work on.
+    private LinkedBlockingQueue<Job> outgoingQueue; // The queue housing jobs we've already worked on and completed.
 
+    /**
+     * @param numJobs
+     * @param property
+     */
     public MyScheduler(int numJobs, String property) {
-        this.numJobs = numJobs;
         this.property = property;
-        this.incomingJobsQueue = new LinkedBlockingQueue<Job>();
+        this.incomingQueue = new LinkedBlockingQueue<>();
+        this.outgoingQueue = new LinkedBlockingQueue<>();
     }
 
+    /**
+     * This is our main method for the Scheduler. All jobs that come in will eventually have this method run in order to give them CPU time and all that. 
+     */
     public void run() {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'run'");
     }
 
-    public LinkedBlockingQueue<Job> getIncomingQueue() {
-        return incomingJobsQueue;
-    }
+    /**
+     * @return LinkedBlockingQueue<Job> outgoingQueue
+     */
     public LinkedBlockingQueue<Job> getOutgoingQueue() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getOutgoingQueue'");
+        return outgoingQueue;
     }
 
+    /**
+     * @return LinkedBlockingQueue<Job> incomingQueue
+     */
+    public LinkedBlockingQueue<Job> getIncomingQueue() {
+        return incomingQueue;
+    }
+
+    @Override
+    public String toString() {
+        return "MyScheduler [property=" + property + ", incomingQueue=" + incomingQueue + ", outgoingQueue="
+                + outgoingQueue + "]";
+    }
 }
