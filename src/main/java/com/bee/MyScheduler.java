@@ -1,6 +1,8 @@
 package com.bee;
 
+import java.util.ArrayList;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.Semaphore;
 
 /*
  *
@@ -14,6 +16,7 @@ public class MyScheduler {
     private String property; // The parameter we're measuring during this test run
     private LinkedBlockingQueue<Job> incomingQueue; // The queue of jobs that the scheduler needs to work on.
     private LinkedBlockingQueue<Job> outgoingQueue; // The queue housing jobs we've already worked on and completed.
+    private Semaphore locker;
 
     /**
      * @param numJobs
@@ -23,6 +26,7 @@ public class MyScheduler {
         this.property = property;
         this.incomingQueue = new LinkedBlockingQueue<>();
         this.outgoingQueue = new LinkedBlockingQueue<>();
+        this.locker = new Semaphore(numJobs/2);
     }
 
     /**
@@ -33,7 +37,15 @@ public class MyScheduler {
         // TODO Create Filter based Off Property
         switch (this.property) {
             case "max wait":
-                    // TODO Implement Scheduler Methodology to Maximize maxWait       
+                ArrayList inbetweener = new ArrayList<>();    
+                try {
+                    this.locker.acquire();
+                    inbetweener.add(this.incomingQueue.take());
+                    this.locker.release();
+                } catch (Exception e) {
+                    System.err.println("Failed to transfer data...");
+                }
+                this.outgoingQueue.add((Job) inbetweener.remove(0));
             case "avg case":
                 // TODO Implement Scheduler Methodology to Maximize avgWait
             case "combined":
