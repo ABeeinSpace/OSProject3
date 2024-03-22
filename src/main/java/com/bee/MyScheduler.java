@@ -31,10 +31,16 @@ public class MyScheduler {
     public void run() {
         // TODO Auto-generated method stub
         // TODO Create Filter based Off Property
-        // TODO Implement Scheduler Methodology to Maximize maxWait
-        // TODO Implement Scheduler Methodology to Maximize Combined
-        // TODO Implement Scheduler Methodology to Maximize Deadlines
-        // TODO Implement Scheduler Methodology to Maximize avgWait
+        switch (this.property) {
+            case "max wait":
+                    // TODO Implement Scheduler Methodology to Maximize maxWait       
+            case "avg case":
+                // TODO Implement Scheduler Methodology to Maximize avgWait
+            case "combined":
+                // TODO Implement Scheduler Methodology to Maximize Combined
+            case "deadlines":
+                // TODO Implement Scheduler Methodology to Maximize Deadlines
+        }
         throw new UnsupportedOperationException("Unimplemented method 'run'");
     }
 
