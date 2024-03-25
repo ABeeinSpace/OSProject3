@@ -70,7 +70,7 @@ public class MyScheduler {
                 break;
 
             case "combined":
-                if (incomingQueue.size() > 1) {
+                if (incomingQueue.size() == 1) {
                     // Use FCFS if there are multiple jobs in the queue to be processed
                     try {
                         this.locker.acquire();
@@ -79,15 +79,18 @@ public class MyScheduler {
                     } catch (Exception e) {
                         System.err.println("Failed to take from Incoming Queue!!!");
                     }
+                    this.outgoingQueue.add(inbetweener.remove(0));
                 } else {
                     // Use SJF if there are multiple jobs in the queue waiting to be
                     // processed
                     Job shortestCombinedJob = incomingQueue.peek();
                     long shortestCombinedWait = shortestCombinedJob.getLength();
-                    for (Job incomingJob : incomingQueue) {
+                    Iterator<Job> secondIncomingIterator = incomingQueue.iterator();
+                    while (secondIncomingIterator.hasNext()) {
+                        Job incomingJob = secondIncomingIterator.next();
                         if (incomingJob.getLength() < shortestCombinedWait) {
                             shortestCombinedJob = incomingJob;
-                            shortestWait = shortestCombinedJob.getLength();
+                            shortestCombinedWait = shortestCombinedJob.getLength();
                         }
                     }
                     incomingQueue.remove(shortestCombinedJob);
@@ -97,14 +100,20 @@ public class MyScheduler {
                 break;
 
             case "deadlines":
-                Job shortestDeadline = incomingQueue.peek();
-                for (Job candidate : incomingQueue) {
-                    if (candidate.getDeadline() < shortestDeadline.getDeadline()) {
-                        shortestDeadline = candidate;
+                for (int i = 0; i < this.incomingQueue.size(); i++) {
+                    Job shortestDeadline = incomingQueue.peek();
+                    Long earliestDeadline = shortestDeadline.getDeadline();
+                    Iterator<Job> tertiaryIncomingIterator = incomingQueue.iterator();
+                    while (tertiaryIncomingIterator.hasNext()) {
+                        Job candidate = tertiaryIncomingIterator.next();
+                        if (candidate.getDeadline() < earliestDeadline) {
+                            shortestDeadline = candidate;
+                            earliestDeadline = candidate.getDeadline();
+                        }
                     }
+                    incomingQueue.remove(shortestDeadline);
+                    outgoingQueue.add(shortestDeadline);
                 }
-                incomingQueue.remove(shortestDeadline);
-                outgoingQueue.add(shortestDeadline);
                 break;
         }
     }
