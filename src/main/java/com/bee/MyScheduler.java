@@ -26,8 +26,8 @@ public class MyScheduler {
      */
     public MyScheduler(int numJobs, String property) {
         this.property = property;
-        this.incomingQueue = new LinkedBlockingQueue<>();
-        this.outgoingQueue = new LinkedBlockingQueue<>();
+        this.incomingQueue = new LinkedBlockingQueue<>(numJobs);
+        this.outgoingQueue = new LinkedBlockingQueue<>(numJobs);
         this.locker = new Semaphore(numJobs / 2);
     }
 
@@ -54,48 +54,51 @@ public class MyScheduler {
             case "avg wait":
                 for (int i = 0; i < this.incomingQueue.size(); i++) {
                     Job shortestJob = incomingQueue.peek();
-                    Long shortestWait = shortestJob.getLength();
-                    Iterator<Job> incomingIterator = incomingQueue.iterator();
-                    while (incomingIterator.hasNext()) {
-                        Job nextJob = incomingIterator.next();
-                        if (nextJob.getLength() < shortestWait) {
-                            shortestJob = nextJob;
-                            shortestWait = nextJob.getLength();
+                    long shortestWait = shortestJob.getLength();
+                    Iterator<Job> secondIncomingIterator = incomingQueue.iterator();
+                    while (secondIncomingIterator.hasNext()) {
+                        Job incomingJob = secondIncomingIterator.next();
+                        if (incomingJob.getLength() < shortestWait) {
+                            shortestJob = incomingJob;
+                            shortestWait = shortestJob.getLength();
                         }
                     }
                     incomingQueue.remove(shortestJob);
                     inbetweener.add(shortestJob);
                     this.outgoingQueue.add(inbetweener.remove(0));
                 }
+
                 break;
 
             case "combined":
-                if (incomingQueue.size() == 1) {
-                    // Use FCFS if there are multiple jobs in the queue to be processed
-                    try {
-                        this.locker.acquire();
-                        inbetweener.add(this.incomingQueue.take());
-                        this.locker.release();
-                    } catch (Exception e) {
-                        System.err.println("Failed to take from Incoming Queue!!!");
-                    }
-                    this.outgoingQueue.add(inbetweener.remove(0));
-                } else {
-                    // Use SJF if there are multiple jobs in the queue waiting to be
-                    // processed
-                    Job shortestCombinedJob = incomingQueue.peek();
-                    long shortestCombinedWait = shortestCombinedJob.getLength();
-                    Iterator<Job> secondIncomingIterator = incomingQueue.iterator();
-                    while (secondIncomingIterator.hasNext()) {
-                        Job incomingJob = secondIncomingIterator.next();
-                        if (incomingJob.getLength() < shortestCombinedWait) {
-                            shortestCombinedJob = incomingJob;
-                            shortestCombinedWait = shortestCombinedJob.getLength();
+                for (int i = 0; i < this.incomingQueue.size(); i++) {
+                    if (incomingQueue.size() == 1) {
+                        // Use FCFS if there are multiple jobs in the queue to be processed
+                        try {
+                            this.locker.acquire();
+                            inbetweener.add(this.incomingQueue.take());
+                            this.locker.release();
+                        } catch (Exception e) {
+                            System.err.println("Failed to take from Incoming Queue!!!");
                         }
+                        this.outgoingQueue.add(inbetweener.remove(0));
+                    } else {
+                        // Use SJF if there are multiple jobs in the queue waiting to be
+                        // processed
+                        Job shortestCombinedJob = incomingQueue.peek();
+                        long shortestCombinedWait = shortestCombinedJob.getLength();
+                        Iterator<Job> secondIncomingIterator = incomingQueue.iterator();
+                        while (secondIncomingIterator.hasNext()) {
+                            Job incomingJob = secondIncomingIterator.next();
+                            if (incomingJob.getLength() < shortestCombinedWait) {
+                                shortestCombinedJob = incomingJob;
+                                shortestCombinedWait = shortestCombinedJob.getLength();
+                            }
+                        }
+                        incomingQueue.remove(shortestCombinedJob);
+                        inbetweener.add(shortestCombinedJob);
+                        this.outgoingQueue.add(inbetweener.remove(0));
                     }
-                    incomingQueue.remove(shortestCombinedJob);
-                    inbetweener.add(shortestCombinedJob);
-                    this.outgoingQueue.add(inbetweener.remove(0));
                 }
                 break;
 
