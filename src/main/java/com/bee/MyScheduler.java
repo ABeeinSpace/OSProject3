@@ -53,7 +53,7 @@ public class MyScheduler {
                 for (int i = 0; i < incomingQueue.size(); i++) {
                     Job nextJob = incomingIterator.next();
                     if (nextJob.getLength() < shortestJob.getLength()) {
-                       shortestJob = nextJob; 
+                        shortestJob = nextJob; 
                     }
                 }
                 incomingQueue.remove(shortestJob);
@@ -61,7 +61,16 @@ public class MyScheduler {
             case "combined":
                 // TODO Implement Scheduler Methodology to Maximize Combined (Algorithm: SJF + FCFS)
             case "deadlines":
-                // TODO Implement Scheduler Methodology to Maximize Deadlines (Algorithm: EDF)
+                Job shortestDeadline = incomingQueue.peek();
+                Iterator<Job> secondIncomingIterator = incomingQueue.iterator();
+                for (int i = 0; i < incomingQueue.size(); i++) {
+                    Job candidate = secondIncomingIterator.next();
+                    if (candidate.getDeadline() < shortestDeadline.getDeadline()) {
+                        shortestDeadline = candidate;
+                    }
+                }
+                incomingQueue.remove(shortestDeadline);
+                outgoingQueue.add(shortestDeadline);
         }
         throw new UnsupportedOperationException("Unimplemented method 'run'");
     }
