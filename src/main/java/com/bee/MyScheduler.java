@@ -34,7 +34,6 @@ public class MyScheduler {
      * This is our main method for the Scheduler. All jobs that come in will eventually have this method run in order to give them CPU time and all that. 
      */
     public void run() {
-        // TODO Auto-generated method stub
         // TODO Create Filter based Off Property
         ArrayList<Job> inbetweener = new ArrayList<>();
         switch (this.property) {
@@ -47,25 +46,53 @@ public class MyScheduler {
                     System.err.println("Failed to transfer data...");
                 }
                 this.outgoingQueue.add(inbetweener.remove(0));
+                break;
             
             case "avg wait":
                 Job shortestJob = incomingQueue.peek();
-                Long shortestwait = shortestJob.getLength();
+                Long shortestWait = shortestJob.getLength();
                 Iterator<Job> incomingIterator = incomingQueue.iterator();
                 while (incomingIterator.hasNext()) {
                     Job nextJob = incomingIterator.next();
-                    if (nextJob.getLength() < shortestwait) {
+                    if (nextJob.getLength() < shortestWait) {
                         shortestJob = nextJob;
-                        shortestwait = nextJob.getLength();
+                        shortestWait = nextJob.getLength();
                     }
                 }
                 incomingQueue.remove(shortestJob);
                 inbetweener.add(shortestJob);
                 this.outgoingQueue.add(inbetweener.remove(0));
+                break;
             
             case "combined":
-                // TODO Implement Scheduler Methodology to Maximize Combined (Algorithm: SJF + FCFS)
-            
+                if (incomingQueue.size() > 1) {
+                    // Use FCFS if there are multiple jobs in the queue to be processed
+                    try {
+                        this.locker.acquire();
+                        inbetweener.add(this.incomingQueue.take());
+                        this.locker.release();
+                    } catch (Exception e) {
+                        System.err.println("Failed to take from Incoming Queue!!!");
+                    }
+                } else {
+                    // Use SJF if there are multiple jobs in the queue waiting to be processed
+                    Job shortestCombinedJob = incomingQueue.peek();
+                    Long shortestCombinedWait = shortestCombinedJob.getLength();
+                    Iterator<Job> incomingCombinedIterator = incomingQueue.iterator();
+                    while (incomingCombinedIterator.hasNext()) {
+                       Job incomingJob = incomingCombinedIterator.next();
+                       if (incomingJob.getLength() < shortestCombinedWait) {
+                            shortestCombinedJob = incomingJob;
+                            shortestWait = shortestCombinedJob.getLength();
+                       }
+                    }
+                    incomingQueue.remove(shortestCombinedJob);
+                    inbetweener.add(shortestCombinedJob);
+                    this.outgoingQueue.add(inbetweener.remove(0));
+                }
+                break;        
+                
+
             case "deadlines":
                 Job shortestDeadline = incomingQueue.peek();
                 Iterator<Job> secondIncomingIterator = incomingQueue.iterator();
@@ -77,6 +104,7 @@ public class MyScheduler {
                 }
                 incomingQueue.remove(shortestDeadline);
                 outgoingQueue.add(shortestDeadline);
+                break;
         }
     }
 
