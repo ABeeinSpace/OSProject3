@@ -18,9 +18,9 @@
 		},
 		{
 			"type": "java",
-			"name": "Launch Main Class (w/ Assertions, reduced ST)",
+			"name": "Launch Main Class (w/ Assertions, Verbose mode test)",
 			"request": "launch",
-			"args": "500",
+			"args": "verbose",
 			"mainClass": "com.bee.App",
 			"projectName": "OSProject3",
 			"vmArgs": "-ea"
