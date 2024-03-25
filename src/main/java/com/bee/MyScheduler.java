@@ -37,7 +37,7 @@ public class MyScheduler {
         // TODO Create Filter based Off Property
         switch (this.property) {
             case "max wait":
-                ArrayList inbetweener = new ArrayList<>();    
+                ArrayList<Job> inbetweener = new ArrayList<>();    
                 try {
                     this.locker.acquire();
                     inbetweener.add(this.incomingQueue.take());
@@ -45,7 +45,7 @@ public class MyScheduler {
                 } catch (Exception e) {
                     System.err.println("Failed to transfer data...");
                 }
-                this.outgoingQueue.add((Job) inbetweener.remove(0));
+                this.outgoingQueue.add(inbetweener.remove(0));
             case "avg case":
                 // TODO Implement Scheduler Methodology to Maximize avgWait
             case "combined":
