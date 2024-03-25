@@ -1,6 +1,7 @@
 package com.bee;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.Semaphore;
 
@@ -47,11 +48,20 @@ public class MyScheduler {
                 }
                 this.outgoingQueue.add(inbetweener.remove(0));
             case "avg case":
-                // TODO Implement Scheduler Methodology to Maximize avgWait
+                Job shortestJob = incomingQueue.peek();
+                Iterator<Job> incomingIterator = incomingQueue.iterator();
+                for (int i = 0; i < incomingQueue.size(); i++) {
+                    Job nextJob = incomingIterator.next();
+                    if (nextJob.getLength() < shortestJob.getLength()) {
+                       shortestJob = nextJob; 
+                    }
+                }
+                incomingQueue.remove(shortestJob);
+                this.outgoingQueue.add(shortestJob);
             case "combined":
-                // TODO Implement Scheduler Methodology to Maximize Combined
+                // TODO Implement Scheduler Methodology to Maximize Combined (Algorithm: SJF + FCFS)
             case "deadlines":
-                // TODO Implement Scheduler Methodology to Maximize Deadlines
+                // TODO Implement Scheduler Methodology to Maximize Deadlines (Algorithm: EDF)
         }
         throw new UnsupportedOperationException("Unimplemented method 'run'");
     }
