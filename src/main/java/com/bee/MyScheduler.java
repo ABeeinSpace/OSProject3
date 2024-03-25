@@ -20,8 +20,8 @@ public class MyScheduler {
     private Semaphore locker;
 
     /**
-     * @param numJobs
-     * @param property
+     * @param numJobs The number of jobs we're going to use for this run
+     * @param property The property/attribute to maximize for this run
      */
     public MyScheduler(int numJobs, String property) {
         this.property = property;
@@ -50,10 +50,8 @@ public class MyScheduler {
             
             case "avg wait":
                 Job shortestJob = incomingQueue.peek();
-                Long shortestWait = shortestJob.getLength();
-                Iterator<Job> incomingIterator = incomingQueue.iterator();
-                while (incomingIterator.hasNext()) {
-                    Job nextJob = incomingIterator.next();
+                long shortestWait = shortestJob.getLength();
+                for (Job nextJob : incomingQueue) {
                     if (nextJob.getLength() < shortestWait) {
                         shortestJob = nextJob;
                         shortestWait = nextJob.getLength();
@@ -77,14 +75,12 @@ public class MyScheduler {
                 } else {
                     // Use SJF if there are multiple jobs in the queue waiting to be processed
                     Job shortestCombinedJob = incomingQueue.peek();
-                    Long shortestCombinedWait = shortestCombinedJob.getLength();
-                    Iterator<Job> incomingCombinedIterator = incomingQueue.iterator();
-                    while (incomingCombinedIterator.hasNext()) {
-                       Job incomingJob = incomingCombinedIterator.next();
-                       if (incomingJob.getLength() < shortestCombinedWait) {
+                    long shortestCombinedWait = shortestCombinedJob.getLength();
+                    for (Job incomingJob : incomingQueue) {
+                        if (incomingJob.getLength() < shortestCombinedWait) {
                             shortestCombinedJob = incomingJob;
                             shortestWait = shortestCombinedJob.getLength();
-                       }
+                        }
                     }
                     incomingQueue.remove(shortestCombinedJob);
                     inbetweener.add(shortestCombinedJob);
@@ -95,9 +91,7 @@ public class MyScheduler {
 
             case "deadlines":
                 Job shortestDeadline = incomingQueue.peek();
-                Iterator<Job> secondIncomingIterator = incomingQueue.iterator();
-                for (int i = 0; i < incomingQueue.size(); i++) {
-                    Job candidate = secondIncomingIterator.next();
+                for (Job candidate : incomingQueue) {
                     if (candidate.getDeadline() < shortestDeadline.getDeadline()) {
                         shortestDeadline = candidate;
                     }
