@@ -36,9 +36,9 @@ public class MyScheduler {
     public void run() {
         // TODO Auto-generated method stub
         // TODO Create Filter based Off Property
+        ArrayList<Job> inbetweener = new ArrayList<>();
         switch (this.property) {
-            case "max wait":
-                ArrayList<Job> inbetweener = new ArrayList<>();    
+            case "max wait":    
                 try {
                     this.locker.acquire();
                     inbetweener.add(this.incomingQueue.take());
@@ -47,19 +47,25 @@ public class MyScheduler {
                     System.err.println("Failed to transfer data...");
                 }
                 this.outgoingQueue.add(inbetweener.remove(0));
-            case "avg case":
+            
+            case "avg wait":
                 Job shortestJob = incomingQueue.peek();
+                Long shortestwait = shortestJob.getLength();
                 Iterator<Job> incomingIterator = incomingQueue.iterator();
-                for (int i = 0; i < incomingQueue.size(); i++) {
+                while (incomingIterator.hasNext()) {
                     Job nextJob = incomingIterator.next();
-                    if (nextJob.getLength() < shortestJob.getLength()) {
-                        shortestJob = nextJob; 
+                    if (nextJob.getLength() < shortestwait) {
+                        shortestJob = nextJob;
+                        shortestwait = nextJob.getLength();
                     }
                 }
                 incomingQueue.remove(shortestJob);
-                this.outgoingQueue.add(shortestJob);
+                inbetweener.add(shortestJob);
+                this.outgoingQueue.add(inbetweener.remove(0));
+            
             case "combined":
                 // TODO Implement Scheduler Methodology to Maximize Combined (Algorithm: SJF + FCFS)
+            
             case "deadlines":
                 Job shortestDeadline = incomingQueue.peek();
                 Iterator<Job> secondIncomingIterator = incomingQueue.iterator();
@@ -72,7 +78,6 @@ public class MyScheduler {
                 incomingQueue.remove(shortestDeadline);
                 outgoingQueue.add(shortestDeadline);
         }
-        throw new UnsupportedOperationException("Unimplemented method 'run'");
     }
 
     /**
