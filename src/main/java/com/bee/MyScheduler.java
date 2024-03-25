@@ -52,22 +52,21 @@ public class MyScheduler {
                 break;
 
             case "avg wait":
-                try {
-                    Thread.sleep(1000);
-                } catch (Exception e) {
-                    // TODO: handle exception
-                }
-                Job shortestJob = incomingQueue.peek();
-                long shortestWait = shortestJob.getLength();
-                for (Job nextJob : incomingQueue) {
-                    if (nextJob.getLength() < shortestWait) {
-                        shortestJob = nextJob;
-                        shortestWait = nextJob.getLength();
+                for (int i = 0; i < this.incomingQueue.size(); i++) {
+                    Job shortestJob = incomingQueue.peek();
+                    Long shortestWait = shortestJob.getLength();
+                    Iterator<Job> incomingIterator = incomingQueue.iterator();
+                    while (incomingIterator.hasNext()) {
+                        Job nextJob = incomingIterator.next();
+                        if (nextJob.getLength() < shortestWait) {
+                            shortestJob = nextJob;
+                            shortestWait = nextJob.getLength();
+                        }
                     }
+                    incomingQueue.remove(shortestJob);
+                    inbetweener.add(shortestJob);
+                    this.outgoingQueue.add(inbetweener.remove(0));
                 }
-                incomingQueue.remove(shortestJob);
-                inbetweener.add(shortestJob);
-                this.outgoingQueue.add(inbetweener.remove(0));
                 break;
 
             case "combined":
