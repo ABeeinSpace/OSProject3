@@ -19,6 +19,8 @@ public class MyScheduler {
     private LinkedBlockingQueue<Job> outgoingQueue; // The queue housing jobs we've already worked on and
                                                     // completed.
     private Semaphore locker;
+    private LinkedBlockingQueue<Job> workQueue;
+    private LinkedBlockingQueue<Job> doneQueue;
 
     /**
      * @param numJobs  The number of jobs we're going to use for this run
@@ -28,6 +30,8 @@ public class MyScheduler {
         this.property = property;
         this.incomingQueue = new LinkedBlockingQueue<>(numJobs);
         this.outgoingQueue = new LinkedBlockingQueue<>(numJobs);
+        this.workQueue = new LinkedBlockingQueue<>(numJobs);
+        this.doneQueue = new LinkedBlockingQueue<>(numJobs);
         this.locker = new Semaphore(numJobs / 2);
     }
 
@@ -39,55 +43,65 @@ public class MyScheduler {
     public void run() {
         // TODO Create Filter based Off Property
         ArrayList<Job> inbetweener = new ArrayList<>();
+        
+        Thread incomingThread = new Thread(() -> {
+            getJobs();
+        });
+
+        Thread outgoingThread = new Thread(() -> {
+            handleFinishedJobs();
+        });
+
+        incomingThread.start();
+        outgoingThread.start();
+
         switch (this.property) {
             case "max wait":
                 try {
                     this.locker.acquire();
-                    inbetweener.add(this.incomingQueue.take());
+                    doneQueue.add(this.workQueue.take());
                     this.locker.release();
                 } catch (Exception e) {
                     System.err.println("Failed to transfer data...");
                 }
-                this.outgoingQueue.add(inbetweener.remove(0));
                 break;
 
             case "avg wait":
-                for (int i = 0; i < this.incomingQueue.size(); i++) {
-                    Job shortestJob = incomingQueue.peek();
+                for (int i = 0; i < this.workQueue.size(); i++) {
+                    Job shortestJob = this.workQueue.peek();
                     long shortestWait = shortestJob.getLength();
-                    Iterator<Job> secondIncomingIterator = incomingQueue.iterator();
-                    while (secondIncomingIterator.hasNext()) {
-                        Job incomingJob = secondIncomingIterator.next();
+                    Iterator<Job> incomingIterator = this.workQueue.iterator();
+                    while (incomingIterator.hasNext()) {
+                        Job incomingJob = incomingIterator.next();
                         if (incomingJob.getLength() < shortestWait) {
                             shortestJob = incomingJob;
                             shortestWait = shortestJob.getLength();
                         }
                     }
-                    incomingQueue.remove(shortestJob);
-                    inbetweener.add(shortestJob);
-                    this.outgoingQueue.add(inbetweener.remove(0));
+                    this.workQueue.remove(shortestJob);
+                    // inbetweener.add(shortestJob);
+                    doneQueue.add(shortestJob);
                 }
 
                 break;
 
             case "combined":
-                for (int i = 0; i < this.incomingQueue.size(); i++) {
-                    if (incomingQueue.size() == 1) {
-                        // Use FCFS if there are multiple jobs in the queue to be processed
+                for (int i = 0; i < this.workQueue.size(); i++) {
+                    if (workQueue.size() == 1) {
+                        // Use FCFS if there aren't multiple jobs in the queue to be processed
                         try {
                             this.locker.acquire();
-                            inbetweener.add(this.incomingQueue.take());
+                            doneQueue.add(this.workQueue.take());
                             this.locker.release();
                         } catch (Exception e) {
-                            System.err.println("Failed to take from Incoming Queue!!!");
+                            System.err.println("Failed to take from work Queue!!!");
                         }
-                        this.outgoingQueue.add(inbetweener.remove(0));
                     } else {
                         // Use SJF if there are multiple jobs in the queue waiting to be
                         // processed
-                        Job shortestCombinedJob = incomingQueue.peek();
+                        Job shortestCombinedJob = workQueue.peek();
                         long shortestCombinedWait = shortestCombinedJob.getLength();
-                        Iterator<Job> secondIncomingIterator = incomingQueue.iterator();
+                        Iterator<Job> secondIncomingIterator = workQueue.iterator();
                         while (secondIncomingIterator.hasNext()) {
                             Job incomingJob = secondIncomingIterator.next();
                             if (incomingJob.getLength() < shortestCombinedWait) {
@@ -95,9 +109,9 @@ public class MyScheduler {
                                 shortestCombinedWait = shortestCombinedJob.getLength();
                             }
                         }
-                        incomingQueue.remove(shortestCombinedJob);
-                        inbetweener.add(shortestCombinedJob);
-                        this.outgoingQueue.add(inbetweener.remove(0));
+                        workQueue.remove(shortestCombinedJob);
+                        doneQueue.add(shortestCombinedJob);
+                        // inbetweener.add(shortestCombinedJob);
                     }
                 }
                 break;
@@ -118,6 +132,25 @@ public class MyScheduler {
                     outgoingQueue.add(shortestDeadline);
                 }
                 break;
+        }
+    }
+
+    /**
+     * Moves elements from the incomingQueue to the workQueue to be used by the scheduler
+     */
+    private void getJobs() {
+        for (Job element: incomingQueue) {
+            workQueue.offer(element);
+            incomingQueue.remove(element);
+        }
+    }
+
+    /**
+     * Move elements from doneQueue to the outgoingQueue
+     */
+    private void handleFinishedJobs() {
+        while (!doneQueue.isEmpty()) {
+            outgoingQueue.offer(doneQueue.remove());
         }
     }
 
