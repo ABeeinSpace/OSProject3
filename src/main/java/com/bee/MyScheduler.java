@@ -28,11 +28,11 @@ public class MyScheduler {
      */
     public MyScheduler(int numJobs, String property) {
         this.property = property;
-        this.incomingQueue = new LinkedBlockingQueue<>(numJobs / 5);
-        this.outgoingQueue = new LinkedBlockingQueue<>(numJobs / 5);
+        this.incomingQueue = new LinkedBlockingQueue<>(numJobs / 4);
+        this.outgoingQueue = new LinkedBlockingQueue<>(numJobs / 4);
         this.workQueue = new LinkedBlockingQueue<>(numJobs / 4);
         this.doneQueue = new LinkedBlockingQueue<>(numJobs / 4);
-        this.locker = new Semaphore(numJobs / 4);
+        this.locker = new Semaphore(numJobs / 5);
     }
 
     /**
@@ -41,8 +41,7 @@ public class MyScheduler {
      * that.
      */
     public void run() {
-        // TODO Create Filter based Off Property
-        ArrayList<Job> inbetweener = new ArrayList<>();
+        // ArrayList<Job> inbetweener = new ArrayList<>();
         
         Thread incomingThread = new Thread(this::getJobs);
 
