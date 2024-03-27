@@ -29,7 +29,7 @@ public class MyScheduler {
     public MyScheduler(int numJobs, String property) {
         this.property = property;
         this.incomingQueue = new LinkedBlockingQueue<>(numJobs / 4);
-        this.outgoingQueue = new LinkedBlockingQueue<>(numJobs / 4);
+        this.outgoingQueue = new LinkedBlockingQueue<>(1);
         this.workQueue = new LinkedBlockingQueue<>(numJobs / 4);
         this.doneQueue = new LinkedBlockingQueue<>(numJobs / 4);
         this.locker = new Semaphore(numJobs / 5);
@@ -121,13 +121,13 @@ public class MyScheduler {
                     
                     long currentTime = System.currentTimeMillis();
                     Job fauxJob = new Job(0, property, shortestDeadline.getDeadline());
-                    if ((currentTime + shortestDeadline.getLength()) > earliestDeadline) {
+                    if ((currentTime + shortestDeadline.getLength()) <= earliestDeadline) {
                         workQueue.remove(shortestDeadline);
-                        doneQueue.add(fauxJob);
+                        doneQueue.add(shortestDeadline);
                     }
                     else{
                         workQueue.remove(shortestDeadline);
-                        doneQueue.add(shortestDeadline);
+                        doneQueue.add(fauxJob);
                     }
                 }
                 break;
