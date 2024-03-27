@@ -63,11 +63,10 @@ public class MyScheduler {
                             shortestWait = shortestJob.getLength();
                         }
                     }
-                    incomingQueue.remove(shortestJob);
                     inbetweener.add(shortestJob);
+                    incomingQueue.remove(shortestJob);
                     this.outgoingQueue.add(inbetweener.remove(0));
                 }
-
                 break;
 
             case "combined":
@@ -114,8 +113,17 @@ public class MyScheduler {
                             earliestDeadline = candidate.getDeadline();
                         }
                     }
-                    incomingQueue.remove(shortestDeadline);
-                    outgoingQueue.add(shortestDeadline);
+                    
+                    long currentTime = System.currentTimeMillis();
+                    Job fauxJob = new Job(0, property, shortestDeadline.getDeadline());
+                    if ((currentTime + shortestDeadline.getLength()) > earliestDeadline) {
+                        incomingQueue.remove(shortestDeadline);
+                        outgoingQueue.add(fauxJob);
+                    }
+                    else{
+                        incomingQueue.remove(shortestDeadline);
+                        outgoingQueue.add(shortestDeadline);
+                    }
                 }
                 break;
         }
