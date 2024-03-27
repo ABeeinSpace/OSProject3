@@ -14,13 +14,13 @@ import java.util.concurrent.Semaphore;
  *
  */
 public class MyScheduler {
-    private String property; // The parameter we're measuring during this test run
-    private LinkedBlockingQueue<Job> incomingQueue; // The queue of jobs that the scheduler needs to work on.
-    private LinkedBlockingQueue<Job> outgoingQueue; // The queue housing jobs we've already worked on and
+    private final String property; // The parameter we're measuring during this test run
+    private final LinkedBlockingQueue<Job> incomingQueue; // The queue of jobs that the scheduler needs to work on.
+    private final LinkedBlockingQueue<Job> outgoingQueue; // The queue housing jobs we've already worked on and
                                                     // completed.
-    private Semaphore locker;
-    private LinkedBlockingQueue<Job> workQueue;
-    private LinkedBlockingQueue<Job> doneQueue;
+    private final Semaphore locker;
+    private final LinkedBlockingQueue<Job> workQueue;
+    private final LinkedBlockingQueue<Job> doneQueue;
 
     /**
      * @param numJobs  The number of jobs we're going to use for this run
@@ -44,13 +44,9 @@ public class MyScheduler {
         // TODO Create Filter based Off Property
         ArrayList<Job> inbetweener = new ArrayList<>();
         
-        Thread incomingThread = new Thread(() -> {
-            getJobs();
-        });
+        Thread incomingThread = new Thread(this::getJobs);
 
-        Thread outgoingThread = new Thread(() -> {
-            handleFinishedJobs();
-        });
+        Thread outgoingThread = new Thread(this::handleFinishedJobs);
 
         incomingThread.start();
         outgoingThread.start();
@@ -66,13 +62,12 @@ public class MyScheduler {
                 }
                 break;
 
-            case "avg wait":
-                for (int i = 0; i < this.workQueue.size(); i++) {
+            case "avg wait": 
+                int i = 0;
+                while (i < this.workQueue.size()) {
                     Job shortestJob = this.workQueue.peek();
                     long shortestWait = shortestJob.getLength();
-                    Iterator<Job> incomingIterator = this.workQueue.iterator();
-                    while (incomingIterator.hasNext()) {
-                        Job incomingJob = incomingIterator.next();
+                    for (Job incomingJob : this.workQueue) {
                         if (incomingJob.getLength() < shortestWait) {
                             shortestJob = incomingJob;
                             shortestWait = shortestJob.getLength();
@@ -81,11 +76,12 @@ public class MyScheduler {
                     this.workQueue.remove(shortestJob);
                     // inbetweener.add(shortestJob);
                     doneQueue.add(shortestJob);
+                    i++;
                 }
                 break;
 
             case "combined":
-                for (int i = 0; i < this.workQueue.size(); i++) {
+                for (int j = 0; j < this.workQueue.size(); j++) {
                     if (workQueue.size() == 1) {
                         // Use FCFS if there aren't multiple jobs in the queue to be processed
                         try {
@@ -100,9 +96,7 @@ public class MyScheduler {
                         // processed
                         Job shortestCombinedJob = workQueue.peek();
                         long shortestCombinedWait = shortestCombinedJob.getLength();
-                        Iterator<Job> secondIncomingIterator = workQueue.iterator();
-                        while (secondIncomingIterator.hasNext()) {
-                            Job incomingJob = secondIncomingIterator.next();
+                        for (Job incomingJob : workQueue) {
                             if (incomingJob.getLength() < shortestCombinedWait) {
                                 shortestCombinedJob = incomingJob;
                                 shortestCombinedWait = shortestCombinedJob.getLength();
@@ -116,12 +110,10 @@ public class MyScheduler {
                 break;
 
             case "deadlines":
-                for (int i = 0; i < this.incomingQueue.size(); i++) {
+                for (int k = 0; k < this.incomingQueue.size(); k++) {
                     Job shortestDeadline = incomingQueue.peek();
-                    Long earliestDeadline = shortestDeadline.getDeadline();
-                    Iterator<Job> tertiaryIncomingIterator = incomingQueue.iterator();
-                    while (tertiaryIncomingIterator.hasNext()) {
-                        Job candidate = tertiaryIncomingIterator.next();
+                    long earliestDeadline = shortestDeadline.getDeadline();
+                    for (Job candidate : incomingQueue) {
                         if (candidate.getDeadline() < earliestDeadline) {
                             shortestDeadline = candidate;
                             earliestDeadline = candidate.getDeadline();
