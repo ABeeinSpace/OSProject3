@@ -110,10 +110,10 @@ public class MyScheduler {
                 break;
 
             case "deadlines":
-                for (int k = 0; k < this.incomingQueue.size(); k++) {
-                    Job shortestDeadline = incomingQueue.peek();
+                for (int k = 0; k < this.workQueue.size(); k++) {
+                    Job shortestDeadline = workQueue.peek();
                     long earliestDeadline = shortestDeadline.getDeadline();
-                    for (Job candidate : incomingQueue) {
+                    for (Job candidate : workQueue) {
                         if (candidate.getDeadline() < earliestDeadline) {
                             shortestDeadline = candidate;
                             earliestDeadline = candidate.getDeadline();
@@ -123,12 +123,12 @@ public class MyScheduler {
                     long currentTime = System.currentTimeMillis();
                     Job fauxJob = new Job(0, property, shortestDeadline.getDeadline());
                     if ((currentTime + shortestDeadline.getLength()) > earliestDeadline) {
-                        incomingQueue.remove(shortestDeadline);
-                        outgoingQueue.add(fauxJob);
+                        workQueue.remove(shortestDeadline);
+                        doneQueue.add(fauxJob);
                     }
                     else{
-                        incomingQueue.remove(shortestDeadline);
-                        outgoingQueue.add(shortestDeadline);
+                        workQueue.remove(shortestDeadline);
+                        doneQueue.add(shortestDeadline);
                     }
                 }
                 break;
