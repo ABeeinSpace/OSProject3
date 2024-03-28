@@ -29,7 +29,7 @@ public class MyScheduler {
     public MyScheduler(int numJobs, String property) {
         this.property = property;
         this.incomingQueue = new LinkedBlockingQueue<>(numJobs / 4);
-        this.outgoingQueue = new LinkedBlockingQueue<>(numJobs / 4);
+        this.outgoingQueue = new LinkedBlockingQueue<>(1);
         this.workQueue = new LinkedBlockingQueue<>(numJobs / 4);
         this.doneQueue = new LinkedBlockingQueue<>(numJobs / 4);
         this.locker = new Semaphore(numJobs / 5);
