@@ -1,7 +1,7 @@
 package com.bee;
 
-import java.util.ArrayList;
-import java.util.Iterator;
+// import java.util.ArrayList;
+// import java.util.Iterator;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.Semaphore;
 
@@ -17,7 +17,7 @@ public class MyScheduler {
     private final String property; // The parameter we're measuring during this test run
     private final LinkedBlockingQueue<Job> incomingQueue; // The queue of jobs that the scheduler needs to work on.
     private final LinkedBlockingQueue<Job> outgoingQueue; // The queue housing jobs we've already worked on and
-                                                    // completed.
+                                                          // completed.
     private final Semaphore locker;
     private final LinkedBlockingQueue<Job> workQueue;
     private final LinkedBlockingQueue<Job> doneQueue;
@@ -42,7 +42,7 @@ public class MyScheduler {
      */
     public void run() {
         // ArrayList<Job> inbetweener = new ArrayList<>();
-        
+
         Thread incomingThread = new Thread(this::getJobs);
 
         Thread outgoingThread = new Thread(this::handleFinishedJobs);
@@ -61,7 +61,7 @@ public class MyScheduler {
                 }
                 break;
 
-            case "avg wait": 
+            case "avg wait":
                 int i = 0;
                 while (i < this.workQueue.size()) {
                     Job shortestJob = this.workQueue.peek();
@@ -118,14 +118,13 @@ public class MyScheduler {
                             earliestDeadline = candidate.getDeadline();
                         }
                     }
-                    
+
                     long currentTime = System.currentTimeMillis();
                     Job fauxJob = new Job(0, property, shortestDeadline.getDeadline());
                     if ((currentTime + shortestDeadline.getLength()) <= earliestDeadline) {
                         workQueue.remove(shortestDeadline);
                         doneQueue.add(shortestDeadline);
-                    }
-                    else{
+                    } else {
                         workQueue.remove(shortestDeadline);
                         doneQueue.add(fauxJob);
                     }
@@ -135,10 +134,11 @@ public class MyScheduler {
     }
 
     /**
-     * Moves elements from the incomingQueue to the workQueue to be used by the scheduler
+     * Moves elements from the incomingQueue to the workQueue to be used by the
+     * scheduler
      */
     private void getJobs() {
-        for (Job element: incomingQueue) {
+        for (Job element : incomingQueue) {
             workQueue.offer(element);
             incomingQueue.remove(element);
         }
