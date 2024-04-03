@@ -109,6 +109,7 @@ public class MyScheduler {
                 break;
 
             case "deadlines":
+            // Burke hint for deadlines: Use a "buffer" for the jobs that wont make their deadline
                 for (int k = 0; k < this.workQueue.size(); k++) {
                     Job shortestDeadline = workQueue.peek();
                     long earliestDeadline = shortestDeadline.getDeadline();
