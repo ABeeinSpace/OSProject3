@@ -113,18 +113,25 @@ public class MyScheduler {
             case "deadlines":
                 // Burke hint for deadlines: Use a "buffer" for the jobs that wont make
                 // their deadline
-                for (int k = 0; k < this.workQueue.size(); k++) {
+                int counter = 0;
+                while (counter < workQueue.size()) {
                     Job shortestDeadline = workQueue.peek();
                     long earliestDeadline = shortestDeadline.getDeadline();
+                    long currentTime = System.currentTimeMillis();
+
                     for (Job candidate : workQueue) {
                         if (candidate.getDeadline() < earliestDeadline) {
                             shortestDeadline = candidate;
                             earliestDeadline = candidate.getDeadline();
                         }
+                        if ((currentTime + candidate.getLength()) > earliestDeadline) {
+                            locker.tryAcquire();
+                            workQueue.remove(candidate);
+                            wontMakeDeadlineBuffer.add(candidate);
+                            locker.release();
+                        }
                     }
 
-                    long currentTime = System.currentTimeMillis();
-                    Job fauxJob = new Job(0, property, shortestDeadline.getDeadline());
                     if ((currentTime + shortestDeadline.getLength()) <= earliestDeadline) {
                         locker.tryAcquire();
                         workQueue.remove(shortestDeadline);
@@ -133,9 +140,10 @@ public class MyScheduler {
                     } else {
                         locker.tryAcquire();
                         workQueue.remove(shortestDeadline);
-                        wontMakeDeadlineBuffer.add(fauxJob);
+                        wontMakeDeadlineBuffer.add(shortestDeadline);
                         locker.release();
                     }
+                    counter++;
                 }
                 for (Job job : wontMakeDeadlineBuffer) {
                     wontMakeDeadlineBuffer.remove(job);
