@@ -109,7 +109,8 @@ public class MyScheduler {
                 break;
 
             case "deadlines":
-            // Burke hint for deadlines: Use a "buffer" for the jobs that wont make their deadline
+                // Burke hint for deadlines: Use a "buffer" for the jobs that wont make
+                // their deadline
                 for (int k = 0; k < this.workQueue.size(); k++) {
                     Job shortestDeadline = workQueue.peek();
                     long earliestDeadline = shortestDeadline.getDeadline();
@@ -123,11 +124,15 @@ public class MyScheduler {
                     long currentTime = System.currentTimeMillis();
                     Job fauxJob = new Job(0, property, shortestDeadline.getDeadline());
                     if ((currentTime + shortestDeadline.getLength()) <= earliestDeadline) {
+                        locker.tryAcquire();
                         workQueue.remove(shortestDeadline);
                         doneQueue.add(shortestDeadline);
+                        locker.release();
                     } else {
+                        locker.tryAcquire();
                         workQueue.remove(shortestDeadline);
                         doneQueue.add(fauxJob);
+                        locker.release();
                     }
                 }
                 break;
