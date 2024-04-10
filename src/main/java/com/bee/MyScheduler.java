@@ -21,6 +21,7 @@ public class MyScheduler {
     private final Semaphore locker;
     private final LinkedBlockingQueue<Job> workQueue;
     private final LinkedBlockingQueue<Job> doneQueue;
+    private final LinkedBlockingQueue<Job> wontMakeDeadlineBuffer;
 
     /**
      * @param numJobs  The number of jobs we're going to use for this run
@@ -32,6 +33,7 @@ public class MyScheduler {
         this.outgoingQueue = new LinkedBlockingQueue<>(1);
         this.workQueue = new LinkedBlockingQueue<>(numJobs / 4);
         this.doneQueue = new LinkedBlockingQueue<>(numJobs / 4);
+        this.wontMakeDeadlineBuffer = new LinkedBlockingQueue<>(numJobs / 4);
         this.locker = new Semaphore(numJobs / 5);
     }
 
@@ -131,9 +133,13 @@ public class MyScheduler {
                     } else {
                         locker.tryAcquire();
                         workQueue.remove(shortestDeadline);
-                        doneQueue.add(fauxJob);
+                        wontMakeDeadlineBuffer.add(fauxJob);
                         locker.release();
                     }
+                }
+                for (Job job : wontMakeDeadlineBuffer) {
+                    wontMakeDeadlineBuffer.remove(job);
+                    doneQueue.add(job);
                 }
                 break;
         }
