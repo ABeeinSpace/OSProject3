@@ -21,7 +21,7 @@ public class MyScheduler {
     private final Semaphore locker;
     private final LinkedBlockingQueue<Job> workQueue;
     private final LinkedBlockingQueue<Job> doneQueue;
-    private final LinkedBlockingQueue<Job> wontMakeDeadlineBuffer;
+    private final LinkedBlockingQueue<Job> bufferOfShame;
 
     /**
      * @param numJobs  The number of jobs we're going to use for this run
@@ -33,7 +33,7 @@ public class MyScheduler {
         this.outgoingQueue = new LinkedBlockingQueue<>(1);
         this.workQueue = new LinkedBlockingQueue<>(numJobs / 4);
         this.doneQueue = new LinkedBlockingQueue<>(numJobs / 4);
-        this.wontMakeDeadlineBuffer = new LinkedBlockingQueue<>(numJobs / 4);
+        this.bufferOfShame = new LinkedBlockingQueue<>(numJobs / 4);
         this.locker = new Semaphore(numJobs / 5);
     }
 
@@ -113,6 +113,7 @@ public class MyScheduler {
             case "deadlines":
                 // Burke hint for deadlines: Use a "buffer" for the jobs that wont make
                 // their deadline
+                // TODO Make sure shortestDeadline and earliestDeadline are being reassigned properly
                 int counter = 0;
                 while (counter < workQueue.size()) {
                     Job shortestDeadline = workQueue.peek();
@@ -120,33 +121,52 @@ public class MyScheduler {
                     long currentTime = System.currentTimeMillis();
 
                     for (Job candidate : workQueue) {
+                        if ((currentTime + candidate.getLength()) > candidate.getDeadline()) {
+                            try {
+                                locker.acquire();
+                            } catch (InterruptedException e) {
+                                System.out.println("Unable to acquire token!");
+                            }
+                            workQueue.remove(candidate);
+                            bufferOfShame.add(candidate);
+                            locker.release();
+                            continue; // Dont run the earliestDeadline checker on this job as it
+                                      // will not make its deadline.
+                        }
+                        // At this point, shortestDeadline *should* actually make its deadline.
+                        shortestDeadline = candidate;
+                        earliestDeadline = shortestDeadline.getDeadline();
+
                         if (candidate.getDeadline() < earliestDeadline) {
                             shortestDeadline = candidate;
                             earliestDeadline = candidate.getDeadline();
                         }
-                        if ((currentTime + candidate.getLength()) > earliestDeadline) {
-                            locker.tryAcquire();
-                            workQueue.remove(candidate);
-                            wontMakeDeadlineBuffer.add(candidate);
-                            locker.release();
-                        }
                     }
 
+                    currentTime = System.currentTimeMillis();
                     if ((currentTime + shortestDeadline.getLength()) <= earliestDeadline) {
-                        locker.tryAcquire();
+                        try {
+                            locker.acquire();
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
                         workQueue.remove(shortestDeadline);
                         doneQueue.add(shortestDeadline);
                         locker.release();
                     } else {
-                        locker.tryAcquire();
+                        try {
+                            locker.acquire();
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
                         workQueue.remove(shortestDeadline);
-                        wontMakeDeadlineBuffer.add(shortestDeadline);
+                        bufferOfShame.add(shortestDeadline);
                         locker.release();
                     }
                     counter++;
                 }
-                for (Job job : wontMakeDeadlineBuffer) {
-                    wontMakeDeadlineBuffer.remove(job);
+                for (Job job : bufferOfShame) {
+                    bufferOfShame.remove(job);
                     doneQueue.add(job);
                 }
                 break;
