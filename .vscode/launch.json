@@ -33,6 +33,15 @@
 			"mainClass": "com.bee.SchedulerTester2",
 			"projectName": "OSProject3",
 			"vmArgs": "-ea"
+		},
+		{
+			"type": "java",
+			"name": "Launch SchedulerTester2 (w/ Assertions)",
+			"request": "launch",
+			"args": "",
+			"mainClass": "com.bee.SchedulerTester2",
+			"projectName": "OSProject3",
+			"vmArgs": "-ea"
 		}
 	]
 }

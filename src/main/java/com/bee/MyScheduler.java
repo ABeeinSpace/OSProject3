@@ -54,12 +54,8 @@ public class MyScheduler {
 
         switch (this.property) {
             case "max wait":
-                try {
-                    this.locker.acquire();
-                    doneQueue.add(this.workQueue.take());
-                    this.locker.release();
-                } catch (Exception e) {
-                    System.err.println("Failed to transfer data...");
+                for (int i = 0; i < workQueue.size(); i++) {
+                    doneQueue.add(this.workQueue.remove());
                 }
                 break;
 
@@ -165,6 +161,7 @@ public class MyScheduler {
                     }
                     counter++;
                 }
+                System.out.println(bufferOfShame.size());
                 for (Job job : bufferOfShame) {
                     bufferOfShame.remove(job);
                     doneQueue.add(job);
