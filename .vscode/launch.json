@@ -24,6 +24,15 @@
 			"mainClass": "com.bee.App",
 			"projectName": "OSProject3",
 			"vmArgs": "-ea"
+		},
+		{
+			"type": "java",
+			"name": "Launch SchedulerTester2 (w/ Assertions, Verbose mode test)",
+			"request": "launch",
+			"args": "verbose",
+			"mainClass": "com.bee.SchedulerTester2",
+			"projectName": "OSProject3",
+			"vmArgs": "-ea"
 		}
 	]
 }

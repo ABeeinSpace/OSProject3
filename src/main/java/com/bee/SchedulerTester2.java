@@ -5,7 +5,7 @@ import java.util.concurrent.*;
 import java.lang.*;
 
 /**
- * Runs MyScheduler.java to test running time.  Usage: $ java
+ * Runs MyScheduler.java to test running time.  Usage: $ java 
  *
  * @author Kyle Burke <kburke@flsouthern.edu>
  */
@@ -13,20 +13,20 @@ public class SchedulerTester2 {
 
     //properties to measure
     private static final String[] GOALS = {"max wait", "avg wait", /* "efficiency",*/ "combined", "deadlines"};
-
-
+    
+    
     //default number of jobs
     private static final int DEFAULT_NUM_JOBS = 1000;
-
+    
     //default min job length
     private static final int DEFAULT_MIN_LENGTH = 1;
-
+    
     //default max job length
     private static final int DEFAULT_MAX_LENGTH = 100;
-
+    
     //default fake speedup TODO: In future years, use this!
     private static final int DEFAULT_SPEEDUP = 1;
-
+    
     public static void main(String[] args) {
         boolean verbose = false;
         for (int i = 0; i < args.length; i++) {
@@ -45,7 +45,7 @@ public class SchedulerTester2 {
                 break;
             }
         }
-
+    
         // You may rename this method to better suit the purpose of your test case
         // Your test case logic here
         int numJobsInput;
@@ -61,7 +61,7 @@ public class SchedulerTester2 {
         } catch (Exception e) {
             minJobInput = DEFAULT_MIN_LENGTH;
         }
-
+        
         final int minJobLength = minJobInput;
         int maxJobInput;
         try {
@@ -70,32 +70,32 @@ public class SchedulerTester2 {
             maxJobInput = DEFAULT_MAX_LENGTH;
         }
         final int maxJobLength = maxJobInput;
-
-
+        
+        
         int averageLength = (minJobLength + maxJobLength) / 2;
         int defaultAvgLength = (DEFAULT_MIN_LENGTH + DEFAULT_MAX_LENGTH) / 2;
-
-
-
+        
+        
+        
         int numScores = 5;
         List<Integer> scores = new ArrayList<Integer>();
-
+        
         for (int scoreIndex = 0; scoreIndex < numScores; scoreIndex++) {
-
-
-
+        
+            
+            
             //run the tests and get the results
             long[] testResults = new long[GOALS.length];
-
-
-
+            
+            
+            
             System.out.println("\n*********************************************************************");
             System.out.println("About to run the simulations with:\n * Num. Jobs: " + numJobs + "\n * Min job length: " + minJobLength + "\n * Max job length: " + maxJobLength);
-
+            
             for (int i = 0; i < GOALS.length; i++) {
                 testResults[i] = runTest(GOALS[i], numJobs, minJobLength, maxJobLength, verbose);
             }
-
+            
             //set up the goals of the tests
             Map<String, List<Integer>> goals = new TreeMap<>();
             List<Integer> maxWaitTimeGoals = new ArrayList<>();
@@ -116,14 +116,14 @@ public class SchedulerTester2 {
             combinedGoals = Arrays.asList(new Integer[] {2275, 2350, 2500, 2700, 2900});//, 3000, 3400});
             int percentageToNumJobs = (int) Math.ceil(numJobs/100);
             List<Integer> deadlineGoals = Arrays.asList(new Integer[] {
-                    85 * percentageToNumJobs,
-                    80 * percentageToNumJobs,
-                    75 * percentageToNumJobs,
-                    70 * percentageToNumJobs,
-                    65 * percentageToNumJobs
-                    //,50 * percentageToNumJobs
-                    //,40 * percentageToNumJobs
-            });
+                85 * percentageToNumJobs, 
+                80 * percentageToNumJobs, 
+                75 * percentageToNumJobs, 
+                70 * percentageToNumJobs, 
+                65 * percentageToNumJobs 
+                //,50 * percentageToNumJobs 
+                //,40 * percentageToNumJobs
+                });
             //old versions
             /*
             maxWaitTimeGoals = Arrays.asList(new Integer[] {4000, 6000, 9000, 14000, 21000, 32000, 48000});
@@ -135,17 +135,17 @@ public class SchedulerTester2 {
             //goals.put("efficiency", efficiencyGoals);
             goals.put(GOALS[2], combinedGoals);
             goals.put(GOALS[3], deadlineGoals);
-
-
-
-
-
+            
+        
+            
+            
+            
             //calculate the points based on the goals
-
-
+            
+            
             int totalScore = 0;
             int totalMax = 0;
-
+            
             for (String goal : goals.keySet()) {
                 List<Integer> statGoals = goals.get(goal);
                 boolean reversed = false;
@@ -175,19 +175,19 @@ public class SchedulerTester2 {
                 totalScore += score;
                 totalMax += maxScore;
             }
-
+            
             //25 points for completing the tests
             int pointsForFinishing = 25;
             totalMax += pointsForFinishing;
             totalScore += pointsForFinishing;
             System.out.println("All tests completed: " + pointsForFinishing + " points");
-
+            
             System.out.println("Total score: " + totalScore + "/" + totalMax);
-
-
+            
+            
             scores.add(totalScore);
         }
-
+        
         Collections.sort(scores);
         int minMode = scores.get(0);
         int prior = minMode;
@@ -206,27 +206,27 @@ public class SchedulerTester2 {
                 prior = next;
             }
         }
-
+        
         System.out.println("Your scores (sorted) are: " + scores);
         System.out.println("Your team's overall score is: " + minMode);
-
-
-
+        
+        
+        
     }
 
 
     // Runs a test looking to optimize a specified property, returning the stats from the run.  Stats are returned as:
     // [maxWaitingTime, totalWaitingTime]
     private static long runTest(String property, int numJobs, int minJobLength, int maxJobLength, boolean verbose) {
-
+    
         int propertyIndex = goalToIndex(property);
-
+        
         List<String> ids = new ArrayList<>();
         Random rng = new Random(System.currentTimeMillis());
         for (int i = 0; i < numJobs; i++) {
             ids.add("" +  rng.nextInt(10000));
         }
-
+        
         System.out.println("\n*********************************************************************");
         System.out.println("Testing for: " + property + "    **************************************");
 
@@ -236,7 +236,7 @@ public class SchedulerTester2 {
         CPU cpu = new CPU("1", schedulerToCpu, verbose);
         cpu.setNumJobs(numJobs);
         //scheduler.setCPU(cpu);
-
+        
         List<Integer> lengths = new ArrayList<>();
         //adds a linear distribution of jobs
         int jobsThisPart = numJobs/2;
@@ -260,13 +260,13 @@ public class SchedulerTester2 {
             int jobLength = maxJobLength;
             lengths.add(jobLength);
         }
-
-
+        
+        
         Collections.shuffle(lengths, rng);
         //for (Job job : jobs) {
-        //System.out.print(job.getLength() + ", ");
+            //System.out.print(job.getLength() + ", ");
         //}
-
+        
 
         Thread jobGenerator = new Thread(() -> {
             int i = 0;
@@ -320,7 +320,7 @@ public class SchedulerTester2 {
                     }
                 });
                 giveToScheduler.start();
-                /*
+                /* 
                 int minWait = (int) Math.floor(.5 * jobLength);
                 int maxWait = (int) Math.ceil(1.5 * jobLength);
                 int waitTime = ThreadLocalRandom.current().nextInt(minWait, maxWait);
@@ -334,7 +334,7 @@ public class SchedulerTester2 {
                 i++;
             }
             //now tell the cpu it's done by sending it a Kill job
-
+            
         });
 
         cpu.start();
@@ -347,23 +347,23 @@ public class SchedulerTester2 {
         jobGenerator.start();
 
         //System.out.println("Total Wait Time: " + cpu.getTotalWaitTime());
-
+        
         //scheduler.stop();
-
+        
         cpu.blockUntilDone();
-
+        
         List<Job> completed = cpu.getCompleted();
         assert completed.size() == numJobs : "The number of completed jobs doesn't match the number created!";
         for (Job job : completed) {
             ids.remove(job.getId());
         }
         assert ids.size() == 0 : "Not all job ids were completed!";
-
+        
         return (new long[] {cpu.getMaxWaitTime(), cpu.getAverageWaitTime(), /*cpu.getEfficiency(), */ cpu.getMaxWaitTime() + 2* cpu.getAverageWaitTime(), cpu.getTotalDeadlinesMade()})[propertyIndex];
-
-
+        
+    
     }
-
+    
     //gets the index of a goal
     private static int goalToIndex(String goal) {
         for (int i = 0; i < GOALS.length; i++) {
@@ -375,5 +375,4 @@ public class SchedulerTester2 {
         throw new IllegalArgumentException("\"" + goal + "\" is not an appopriate goal!");
     }
 }
-
 

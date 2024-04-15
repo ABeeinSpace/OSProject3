@@ -130,16 +130,16 @@ public class MyScheduler {
                             workQueue.remove(candidate);
                             bufferOfShame.add(candidate);
                             locker.release();
-                            continue; // Dont run the earliestDeadline checker on this job as it
-                                      // will not make its deadline.
-                        }
-                        // At this point, shortestDeadline *should* actually make its deadline.
-                        shortestDeadline = candidate;
-                        earliestDeadline = shortestDeadline.getDeadline();
-
-                        if (candidate.getDeadline() < earliestDeadline) {
+                        } else {
+                            // At this point, shortestDeadline *should* actually make its
+                            // deadline.
                             shortestDeadline = candidate;
-                            earliestDeadline = candidate.getDeadline();
+                            earliestDeadline = shortestDeadline.getDeadline();
+
+                            if (candidate.getDeadline() < earliestDeadline) {
+                                shortestDeadline = candidate;
+                                earliestDeadline = candidate.getDeadline();
+                            }
                         }
                     }
 
