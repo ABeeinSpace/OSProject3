@@ -9,7 +9,7 @@ import java.util.concurrent.*;
  *
  * @author Kyle Burke <kburke@flsouthern.edu>
  */
-public class App {
+public class SchedulerTester {
 
     // properties to measure
     private static final String[] GOALS = {

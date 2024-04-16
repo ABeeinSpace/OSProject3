@@ -5,7 +5,7 @@
 			"type": "java",
 			"name": "Launch Main Class (w/ Assertions)",
 			"request": "launch",
-			"mainClass": "com.bee.App",
+			"mainClass": "com.bee.SchedulerTester",
 			"projectName": "OSProject3",
 			"vmArgs": "-ea"
 		},
@@ -13,7 +13,7 @@
 			"type": "java",
 			"name": "Launch Main Class",
 			"request": "launch",
-			"mainClass": "com.bee.App",
+			"mainClass": "com.bee.SchedulerTester",
 			"projectName": "OSProject3"
 		},
 		{
@@ -21,7 +21,7 @@
 			"name": "Launch Main Class (w/ Assertions, Verbose mode test)",
 			"request": "launch",
 			"args": "verbose",
-			"mainClass": "com.bee.App",
+			"mainClass": "com.bee.SchedulerTester",
 			"projectName": "OSProject3",
 			"vmArgs": "-ea"
 		},
