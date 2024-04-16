@@ -110,7 +110,6 @@ public class MyScheduler {
             case "deadlines":
                 // Burke hint for deadlines: Use a "buffer" for the jobs that wont make
                 // their deadline
-                // TODO Make sure shortestDeadline and earliestDeadline are being reassigned properly
                 int counter = 0;
                 while (counter < workQueue.size()) {
 
@@ -142,7 +141,7 @@ public class MyScheduler {
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
-                        workQueue.remove(shortestDeadline);
+                        deadlinesQueue.remove(shortestDeadline);
                         doneQueue.add(shortestDeadline);
                         locker.release();
                     } else {
@@ -151,13 +150,16 @@ public class MyScheduler {
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
-                        workQueue.remove(shortestDeadline);
+                        deadlinesQueue.remove(shortestDeadline);
                         bufferOfShame.add(shortestDeadline);
                         locker.release();
                     }
                     counter++;
                 }
                 System.out.println(bufferOfShame.size());
+                // Do the jobs in the buffer of shame. We have to do every job, but these
+                // jobs would've been late so they get punted to the back to think about
+                // what theyve done.
                 for (Job job : bufferOfShame) {
                     bufferOfShame.remove(job);
                     doneQueue.add(job);
