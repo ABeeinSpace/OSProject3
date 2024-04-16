@@ -3,6 +3,7 @@ package com.bee;
 // import java.util.ArrayList;
 // import java.util.Iterator;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.Semaphore;
 
 /*
@@ -112,6 +113,8 @@ public class MyScheduler {
                 // TODO Make sure shortestDeadline and earliestDeadline are being reassigned properly
                 int counter = 0;
                 while (counter < workQueue.size()) {
+
+                    PriorityBlockingQueue<Job> deadlinesQueue = new PriorityBlockingQueue<Job>();
                     Job shortestDeadline = workQueue.peek();
                     long earliestDeadline = shortestDeadline.getDeadline();
                     long currentTime = System.currentTimeMillis();
@@ -127,20 +130,13 @@ public class MyScheduler {
                             bufferOfShame.add(candidate);
                             locker.release();
                         } else {
-                            // At this point, shortestDeadline *should* actually make its
-                            // deadline.
-                            shortestDeadline = candidate;
-                            earliestDeadline = shortestDeadline.getDeadline();
-
-                            if (candidate.getDeadline() < earliestDeadline) {
-                                shortestDeadline = candidate;
-                                earliestDeadline = candidate.getDeadline();
-                            }
+                            workQueue.remove(candidate);
+                            deadlinesQueue.add(candidate);
                         }
                     }
 
                     currentTime = System.currentTimeMillis();
-                    if ((currentTime + shortestDeadline.getLength()) <= earliestDeadline) {
+                    if ((currentTime + deadlinesQueue.peek().getLength()) <= earliestDeadline) {
                         try {
                             locker.acquire();
                         } catch (InterruptedException e) {
