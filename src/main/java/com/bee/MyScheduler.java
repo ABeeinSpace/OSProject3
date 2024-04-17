@@ -121,16 +121,14 @@ public class MyScheduler {
                             new Comparator<Job>() {
                                 public int compare(Job jobA, Job jobB) {
                                     if (jobA.getDeadline() < jobB.getDeadline()) {
-                                        return -1;
-                                    } else if (jobA.getDeadline() > jobB.getDeadline()) {
                                         return 1;
+                                    } else if (jobA.getDeadline() > jobB.getDeadline()) {
+                                        return -1;
                                     } else {
                                         return 0;
                                     }
                                 }
                             });
-                    Job shortestDeadline = workQueue.peek();
-                    long earliestDeadline = shortestDeadline.getDeadline();
                     long currentTime = System.currentTimeMillis();
 
                     for (Job candidate : workQueue) {
@@ -151,26 +149,20 @@ public class MyScheduler {
                         deadlinesQueue.add(element);
 
                     }
-
+                    Job previousJob = deadlinesQueue.peek();
                     currentTime = System.currentTimeMillis();
-                    if ((currentTime + deadlinesQueue.peek().getLength()) <= deadlinesQueue.peek().getDeadline()) {
-                        try {
-                            locker.acquire();
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                        Job job = deadlinesQueue.remove();
-                        doneQueue.add(job);
-                        locker.release();
+                    if ((currentTime + deadlinesQueue.peek().getLength() + previousJob.getLength() ) <= deadlinesQueue.peek().getDeadline()) {
+                        previousJob = deadlinesQueue.remove();
+                        doneQueue.add(previousJob);
                     } else {
-                        try {
-                            locker.acquire();
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                        deadlinesQueue.remove(shortestDeadline);
-                        bufferOfShame.add(shortestDeadline);
-                        locker.release();
+                        // try {
+                        //     locker.acquire();
+                        // } catch (InterruptedException e) {
+                        //     e.printStackTrace();
+                        // }
+                        previousJob = deadlinesQueue.remove();
+                        bufferOfShame.add(previousJob);
+                        // locker.release();
                     }
                     counter++;
                 }
