@@ -120,9 +120,9 @@ public class MyScheduler {
                     PriorityBlockingQueue<Job> deadlinesQueue = new PriorityBlockingQueue<Job>(8,
                             new Comparator<Job>() {
                                 public int compare(Job jobA, Job jobB) {
-                                    if (jobA.getDeadline() < jobB.getDeadline()) {
+                                    if (jobA.getDeadline() > jobB.getDeadline()) {
                                         return 1;
-                                    } else if (jobA.getDeadline() > jobB.getDeadline()) {
+                                    } else if (jobA.getDeadline() < jobB.getDeadline()) {
                                         return -1;
                                     } else {
                                         return 0;
@@ -131,39 +131,9 @@ public class MyScheduler {
                             });
                     long currentTime = System.currentTimeMillis();
 
-                    for (Job candidate : workQueue) {
-                        // if ((currentTime + candidate.getLength()) > candidate.getDeadline()) {
-                        //     try {
-                        //         locker.acquire();
-                        //     } catch (InterruptedException e) {
-                        //         System.out.println("Unable to acquire token!");
-                        //     }
-                        //     workQueue.remove(candidate);
-                        //     bufferOfShame.add(candidate);
-                        //     locker.release();
-                        // } else {
-                        //     workQueue.remove(candidate);
-                        //     deadlinesQueue.add(candidate);
-                        // }
-                        Job element = workQueue.poll();
-                        deadlinesQueue.add(element);
 
-                    }
-                    Job previousJob = deadlinesQueue.peek();
-                    currentTime = System.currentTimeMillis();
-                    if ((currentTime + deadlinesQueue.peek().getLength() + previousJob.getLength() ) <= deadlinesQueue.peek().getDeadline()) {
-                        previousJob = deadlinesQueue.remove();
-                        doneQueue.add(previousJob);
-                    } else {
-                        // try {
-                        //     locker.acquire();
-                        // } catch (InterruptedException e) {
-                        //     e.printStackTrace();
-                        // }
-                        previousJob = deadlinesQueue.remove();
-                        bufferOfShame.add(previousJob);
-                        // locker.release();
-                    }
+                    
+
                     counter++;
                 }
                 // Do the jobs in the buffer of shame. We have to do every job, but these
