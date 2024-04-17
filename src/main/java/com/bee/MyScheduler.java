@@ -134,30 +134,33 @@ public class MyScheduler {
                     long currentTime = System.currentTimeMillis();
 
                     for (Job candidate : workQueue) {
-                        if ((currentTime + candidate.getLength()) > candidate.getDeadline()) {
-                            try {
-                                locker.acquire();
-                            } catch (InterruptedException e) {
-                                System.out.println("Unable to acquire token!");
-                            }
-                            workQueue.remove(candidate);
-                            bufferOfShame.add(candidate);
-                            locker.release();
-                        } else {
-                            workQueue.remove(candidate);
-                            deadlinesQueue.add(candidate);
-                        }
+                        // if ((currentTime + candidate.getLength()) > candidate.getDeadline()) {
+                        //     try {
+                        //         locker.acquire();
+                        //     } catch (InterruptedException e) {
+                        //         System.out.println("Unable to acquire token!");
+                        //     }
+                        //     workQueue.remove(candidate);
+                        //     bufferOfShame.add(candidate);
+                        //     locker.release();
+                        // } else {
+                        //     workQueue.remove(candidate);
+                        //     deadlinesQueue.add(candidate);
+                        // }
+                        Job element = workQueue.poll();
+                        deadlinesQueue.add(element);
+
                     }
 
                     currentTime = System.currentTimeMillis();
-                    if ((currentTime + deadlinesQueue.peek().getLength()) <= earliestDeadline) {
+                    if ((currentTime + deadlinesQueue.peek().getLength()) <= deadlinesQueue.peek().getDeadline()) {
                         try {
                             locker.acquire();
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
-                        deadlinesQueue.remove(shortestDeadline);
-                        doneQueue.add(shortestDeadline);
+                        Job job = deadlinesQueue.remove();
+                        doneQueue.add(job);
                         locker.release();
                     } else {
                         try {
