@@ -156,7 +156,6 @@ public class MyScheduler {
                     }
                     counter++;
                 }
-                System.out.println(bufferOfShame.size());
                 // Do the jobs in the buffer of shame. We have to do every job, but these
                 // jobs would've been late so they get punted to the back to think about
                 // what theyve done.
