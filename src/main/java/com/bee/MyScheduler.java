@@ -1,5 +1,6 @@
 package com.bee;
 
+import java.util.Comparator;
 // import java.util.ArrayList;
 // import java.util.Iterator;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -111,9 +112,23 @@ public class MyScheduler {
                 // Burke hint for deadlines: Use a "buffer" for the jobs that wont make
                 // their deadline
                 int counter = 0;
-                while (counter < workQueue.size()) {
+                while (counter < workQueue
+                        .size()) { // Preventing a potential NullPointerException if we
+                                   // try to grab things from workQueue before
+                                   // incomingThread has had a chance to set up the queue
 
-                    PriorityBlockingQueue<Job> deadlinesQueue = new PriorityBlockingQueue<Job>();
+                    PriorityBlockingQueue<Job> deadlinesQueue = new PriorityBlockingQueue<Job>(8,
+                            new Comparator<Job>() {
+                                public int compare(Job jobA, Job jobB) {
+                                    if (jobA.getDeadline() < jobB.getDeadline()) {
+                                        return -1;
+                                    } else if (jobA.getDeadline() > jobB.getDeadline()) {
+                                        return 1;
+                                    } else {
+                                        return 0;
+                                    }
+                                }
+                            });
                     Job shortestDeadline = workQueue.peek();
                     long earliestDeadline = shortestDeadline.getDeadline();
                     long currentTime = System.currentTimeMillis();
