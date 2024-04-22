@@ -21,6 +21,7 @@ public class MyScheduler {
     private final LinkedBlockingQueue<Job> outgoingQueue; // The queue housing jobs we've already worked on and
                                                           // completed.
     private final Semaphore locker;
+    private final int numJobs;
     private final LinkedBlockingQueue<Job> workQueue;
     private final LinkedBlockingQueue<Job> doneQueue;
     private final LinkedBlockingQueue<Job> bufferOfShame;
@@ -31,6 +32,7 @@ public class MyScheduler {
      */
     public MyScheduler(int numJobs, String property) {
         this.property = property;
+        this.numJobs = numJobs;
         this.incomingQueue = new LinkedBlockingQueue<>(numJobs / 4);
         this.outgoingQueue = new LinkedBlockingQueue<>(1);
         this.workQueue = new LinkedBlockingQueue<>(numJobs / 4);
@@ -56,36 +58,43 @@ public class MyScheduler {
 
     switch (this.property) {
     case "max wait":
-      for (int i = 0; i < workQueue.size(); i++) {
-        doneQueue.add(this.workQueue.remove());
+      for (int i = 0; i < numJobs; i++) {
+        try {
+          doneQueue.put(this.workQueue.take());
+        } catch (Exception e) {
+          System.out.println("It broke!");
+        }
       }
       break;
 
     case "avg wait":
-      int i = 0;
-      while (i < this.workQueue.size()) {
-        Job shortestJob = this.workQueue.peek();
-        long shortestWait = shortestJob.getLength();
-        for (Job incomingJob : this.workQueue) {
-          if (incomingJob.getLength() < shortestWait) {
-            shortestJob = incomingJob;
-            shortestWait = shortestJob.getLength();
+      for (int i = 0; i < numJobs; i++) {
+        try {
+          Job shortestJob = this.workQueue.take();
+          long shortestWait = shortestJob.getLength();
+          Job incomingJob = this.workQueue.take();
+          for (int j = 0; j < workQueue.size(); j++) {
+            if (incomingJob.getLength() < shortestWait) {
+              shortestJob = incomingJob;
+              shortestWait = shortestJob.getLength();
+            }
           }
+          this.workQueue.take();
+          doneQueue.put(shortestJob);
+        } catch (Exception e) {
+          //TODO: handle exception
         }
-        this.workQueue.remove(shortestJob);
-        // inbetweener.add(shortestJob);
-        doneQueue.add(shortestJob);
         i++;
       }
       break;
 
     case "combined":
-      for (int j = 0; j < this.workQueue.size(); j++) {
+      for (int j = 0; j < numJobs; j++) {
         if (workQueue.size() == 1) {
           // Use FCFS if there aren't multiple jobs in the queue to be processed
           try {
             this.locker.acquire();
-            doneQueue.add(this.workQueue.take());
+            doneQueue.put(this.workQueue.take());
             this.locker.release();
           } catch (Exception e) {
             System.err.println("Failed to take from work Queue!!!");
@@ -93,16 +102,20 @@ public class MyScheduler {
         } else {
           // Use SJF if there are multiple jobs in the queue waiting to be
           // processed
-          Job shortestCombinedJob = workQueue.peek();
-          long shortestCombinedWait = shortestCombinedJob.getLength();
-          for (Job incomingJob : workQueue) {
-            if (incomingJob.getLength() < shortestCombinedWait) {
-              shortestCombinedJob = incomingJob;
-              shortestCombinedWait = shortestCombinedJob.getLength();
+          try {
+            Job shortestCombinedJob = this.workQueue.take();
+            long shortestCombinedWait = shortestCombinedJob.getLength();
+            for (Job incomingJob : this.workQueue) {
+              if (incomingJob.getLength() < shortestCombinedWait) {
+                shortestCombinedJob = incomingJob;
+                shortestCombinedWait = shortestCombinedJob.getLength();
+              }
             }
+            workQueue.take();
+            doneQueue.put(shortestCombinedJob);
+          } catch (Exception e) {
+            //TODO: handle exception
           }
-          workQueue.remove(shortestCombinedJob);
-          doneQueue.add(shortestCombinedJob);
           // inbetweener.add(shortestCombinedJob);
         }
       }
@@ -124,8 +137,7 @@ public class MyScheduler {
             }
           });
       long previousJobRuntime = 0;
-      for (Job whatthefuckingshit :
-           workQueue) { // Preventing a potential NullPointerException if we
+      for (int i = 0; i < numJobs; i++) { // Preventing a potential NullPointerException if we
                         // try to grab things from workQueue before
                         // incomingThread has had a chance to set up the queue
 
@@ -138,12 +150,22 @@ public class MyScheduler {
 
         if ((currentTime + workQueue.peek().getLength() + previousJobRuntime) >
             workQueue.peek().getDeadline()) {
-          Job bitch = workQueue.poll();
-          bufferOfShame.add(bitch);
+          try {
+            Job bitch = workQueue.take();
+            bufferOfShame.put(bitch);
+            
+          } catch (Exception e) {
+            //TODO: handle exception
+          }
         } else {
-          Job notBitch = workQueue.poll();
-          deadlinesQueue.add(notBitch);
-          previousJobRuntime = notBitch.getLength();
+          try {
+            Job notBitch = workQueue.take();
+            deadlinesQueue.put(notBitch);
+            previousJobRuntime = notBitch.getLength();
+            
+          } catch (Exception e) {
+            //TODO: handle exception
+          }
         }
         // if ((currentTime + deadlinesQueue.peek().getLength() +
         // runningJob.getLength()) <= deadlinesQueue.peek().getDeadline()) {
@@ -153,15 +175,24 @@ public class MyScheduler {
         // }
       }
       for (Job heck : deadlinesQueue) {
-        Job runningJob = deadlinesQueue.remove();
-        doneQueue.add(runningJob);
+        try {
+          Job runningJob = deadlinesQueue.take();
+          doneQueue.put(runningJob);
+        } catch (Exception e) {
+          //TODO: handle exception
+        }
       }
       // Do the jobs in the buffer of shame. We have to do every job, but these
       // jobs would've been late so they get punted to the back to think about
       // what theyve done.
       for (Job job : bufferOfShame) {
-        bufferOfShame.remove(job);
-        doneQueue.add(job);
+        try {
+          bufferOfShame.take();
+          doneQueue.put(job);
+          
+        } catch (Exception e) {
+          //TODO: handle exception
+        }
       }
       break;
     }
@@ -172,19 +203,28 @@ public class MyScheduler {
      * scheduler
      */
     private void getJobs() {
-        for (Job element : incomingQueue) {
-            workQueue.offer(element);
-            incomingQueue.remove(element);
+      try {
+        for (int i = 0; i < numJobs; i++) {
+            Job element = incomingQueue.take();
+            workQueue.put(element);
         }
+      } catch (Exception e) {
+        //TODO: handle exception
+      }
     }
 
     /**
      * Move elements from doneQueue to the outgoingQueue
      */
     private void handleFinishedJobs() {
-        while (!doneQueue.isEmpty()) {
-            outgoingQueue.offer(doneQueue.remove());
+      try {
+        for (int i = 0; i < numJobs; i++) {
+          Job element = doneQueue.take();
+          outgoingQueue.put(element);
         }
+      } catch (Exception e) {
+        //TODO: handle exception
+      }
     }
 
     /**
