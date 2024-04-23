@@ -3,6 +3,7 @@ package com.bee;
 import java.util.Comparator;
 // import java.util.ArrayList;
 // import java.util.Iterator;
+import java.util.Objects;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.Semaphore;
@@ -60,7 +61,9 @@ public class MyScheduler {
       case "max wait":
         for (int i = 0; i < numJobs; i++) {
           try {
+            locker.acquire();
             doneQueue.put(this.workQueue.take());
+            locker.release();
           } catch (Exception e) {
             System.out.println("It broke!");
           }
@@ -70,10 +73,12 @@ public class MyScheduler {
       case "avg wait":
         for (int i = 0; i < numJobs; i++) {
           try {
-            Job heck = workQueue.take();
-            doneQueue.put(heck);
+            // locker.acquire();
+            // Job heck = workQueue.take();
+            doneQueue.put(workQueue.take());
+            // locker.release();
           } catch (Exception e) {
-            // TODO: handle exception
+            System.out.println("It broke!");
           }
         }
         break;
@@ -83,32 +88,21 @@ public class MyScheduler {
           if (workQueue.size() == 1) {
             // Use FCFS if there aren't multiple jobs in the queue to be processed
             try {
-              this.locker.acquire();
               doneQueue.put(this.workQueue.take());
-              this.locker.release();
             } catch (Exception e) {
               System.err.println("Failed to take from work Queue!!!");
             }
           } else {
             // Use SJF if there are multiple jobs in the queue waiting to be
             // processed
-            for (int j = 0; j < numJobs; j++) {
-              try {
-                Job heck = workQueue.take();
-                workQueue.put(heck);
-              } catch (Exception e) {
-                // TODO: handle exception
-              }
-            }
-
-            for (int k = 0; k < numJobs; k++) {
+            // for (int j = 0; j < numJobs; j++) {
               try {
                 Job heck = workQueue.take();
                 doneQueue.put(heck);
               } catch (Exception e) {
-                // TODO: handle exception
+                System.out.println("It broke!");
               }
-            }
+            // }
           }
         }
         break;
@@ -117,40 +111,36 @@ public class MyScheduler {
         // Burke hint for deadlines: Use a "buffer" for the jobs that wont make
         // their deadline
         long previousJobRuntime = 0;
-        for (int i = 0; i < numJobs; i++) { // Preventing a potential NullPointerException if we
-                                            // try to grab things from workQueue before
-                                            // incomingThread has had a chance to set up the queue
-
-          long currentTime = System.currentTimeMillis();
-
-          if ((currentTime + workQueue.peek().getLength() + previousJobRuntime) > workQueue.peek().getDeadline()) {
-            try {
-              Job bitch = workQueue.take();
-              bufferOfShame.put(bitch);
-
-            } catch (Exception e) {
-              // TODO: handle exception
-            }
-          }
-        }
-        for (Job heck : deadlinesQueue) {
+        long currentTime = 0;
+        for (int i = 0; i < numJobs; i++) {
           try {
-            Job runningJob = deadlinesQueue.take();
-            doneQueue.put(runningJob);
+            Job currentJob = workQueue.take();
+            if ((currentTime + currentJob.getLength() + previousJobRuntime) > currentJob.getDeadline()) {
+              // locker.acquire();
+              bufferOfShame.put(currentJob);
+              // locker.release();
+              currentTime++;
+              previousJobRuntime = 1;
+            } else {
+              // locker.acquire();
+              doneQueue.put(currentJob);
+              // locker.release();
+              currentTime += currentJob.getLength();
+              previousJobRuntime = currentJob.getLength();
+            }
           } catch (Exception e) {
-            // TODO: handle exception
+              System.out.println("It broke!");
           }
         }
         // Do the jobs in the buffer of shame. We have to do every job, but these
         // jobs would've been late so they get punted to the back to think about
-        // what theyve done.
+        // what they've done.
         for (Job job : bufferOfShame) {
           try {
             bufferOfShame.take();
             doneQueue.put(job);
-
           } catch (Exception e) {
-            // TODO: handle exception
+            System.out.println("It broke!");
           }
         }
         break;
@@ -168,7 +158,7 @@ public class MyScheduler {
         workQueue.put(element);
       }
     } catch (Exception e) {
-      // TODO: handle exception
+      System.out.println("It broke!");
     }
   }
 
@@ -182,7 +172,7 @@ public class MyScheduler {
         outgoingQueue.put(element);
       }
     } catch (Exception e) {
-      // TODO: handle exception
+      System.out.println("It broke!");
     }
   }
 
@@ -194,25 +184,13 @@ public class MyScheduler {
     if (property == "deadlines") {
       workQueue = new PriorityBlockingQueue<>(numJobs / 4, new Comparator<Job>() {
         public int compare(Job jobA, Job jobB) {
-          if (jobA.getDeadline() > jobB.getDeadline()) {
-            return 1;
-          } else if (jobA.getDeadline() < jobB.getDeadline()) {
-            return -1;
-          } else {
-            return 0;
-          }
+           return Long.compare(jobA.getDeadline(), jobB.getDeadline());
         }
       });
     } else {
       workQueue = new PriorityBlockingQueue<>(numJobs / 4, new Comparator<Job>() {
         public int compare(Job jobA, Job jobB) {
-          if (jobA.getLength() > jobB.getLength()) {
-            return 1;
-          } else if (jobA.getLength() < jobB.getLength()) {
-            return -1;
-          } else {
-            return 0;
-          }
+            return Long.compare(jobA.getLength(), jobB.getLength());
         }
       });
     }
