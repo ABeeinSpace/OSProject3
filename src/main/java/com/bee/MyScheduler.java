@@ -22,7 +22,7 @@ public class MyScheduler {
                                                         // completed.
   private final Semaphore locker;
   private final int numJobs;
-  private final LinkedBlockingQueue<Job> workQueue;
+  private final PriorityBlockingQueue<Job> workQueue;
   private final LinkedBlockingQueue<Job> doneQueue;
   private final LinkedBlockingQueue<Job> bufferOfShame;
 
@@ -35,7 +35,7 @@ public class MyScheduler {
     this.numJobs = numJobs;
     this.incomingQueue = new LinkedBlockingQueue<>(numJobs / 4);
     this.outgoingQueue = new LinkedBlockingQueue<>(1);
-    this.workQueue = new LinkedBlockingQueue<>(numJobs / 4);
+    this.workQueue = createWorkQueue();
     this.doneQueue = new LinkedBlockingQueue<>(numJobs / 4);
     this.bufferOfShame = new LinkedBlockingQueue<>(numJobs / 4);
     this.locker = new Semaphore(numJobs / 5);
@@ -68,41 +68,9 @@ public class MyScheduler {
         break;
 
       case "avg wait":
-        PriorityBlockingQueue<Job> avgWaitQueue = new PriorityBlockingQueue<Job>(8, new Comparator<Job>() {
-          public int compare(Job jobA, Job jobB) {
-            if (jobA.getLength() > jobB.getLength()) {
-              return 1;
-            } else if (jobA.getLength() < jobB.getLength()) {
-              return -1;
-            } else {
-              return 0;
-            }
-          }
-        });
         for (int i = 0; i < numJobs; i++) {
           try {
             Job heck = workQueue.take();
-            avgWaitQueue.put(heck);
-            // Job shortestJob = this.workQueue.take();
-            // long shortestWait = shortestJob.getLength();
-            // Job incomingJob = shortestJob;
-            // for (int j = 0; j < numJobs; j++) {
-            // if (incomingJob.getLength() < shortestWait) {
-            // shortestJob = incomingJob;
-            // shortestWait = shortestJob.getLength();
-            // } else {
-            // this.workQueue.put(shortestJob);
-            // }
-            // }
-            // this.workQueue.take();
-            // doneQueue.put(shortestJob);
-          } catch (Exception e) {
-            // TODO: handle exception
-          }
-        }
-        for (int i = 0; i < numJobs; i++) {
-          try {
-            Job heck = avgWaitQueue.take();
             doneQueue.put(heck);
           } catch (Exception e) {
             // TODO: handle exception
@@ -111,17 +79,6 @@ public class MyScheduler {
         break;
 
       case "combined":
-        PriorityBlockingQueue<Job> combinedQueue = new PriorityBlockingQueue<Job>(8, new Comparator<Job>() {
-          public int compare(Job jobA, Job jobB) {
-            if (jobA.getLength() > jobB.getLength()) {
-              return 1;
-            } else if (jobA.getLength() < jobB.getLength()) {
-              return -1;
-            } else {
-              return 0;
-            }
-          }
-        });
         for (int i = 0; i < numJobs; i++) {
           if (workQueue.size() == 1) {
             // Use FCFS if there aren't multiple jobs in the queue to be processed
@@ -138,7 +95,7 @@ public class MyScheduler {
             for (int j = 0; j < numJobs; j++) {
               try {
                 Job heck = workQueue.take();
-                combinedQueue.put(heck);
+                workQueue.put(heck);
               } catch (Exception e) {
                 // TODO: handle exception
               }
@@ -146,13 +103,12 @@ public class MyScheduler {
 
             for (int k = 0; k < numJobs; k++) {
               try {
-                Job heck = combinedQueue.take();
+                Job heck = workQueue.take();
                 doneQueue.put(heck);
               } catch (Exception e) {
-                //TODO: handle exception
+                // TODO: handle exception
               }
             }
-
           }
         }
         break;
@@ -160,17 +116,6 @@ public class MyScheduler {
       case "deadlines":
         // Burke hint for deadlines: Use a "buffer" for the jobs that wont make
         // their deadline
-        PriorityBlockingQueue<Job> deadlinesQueue = new PriorityBlockingQueue<Job>(8, new Comparator<Job>() {
-          public int compare(Job jobA, Job jobB) {
-            if (jobA.getDeadline() > jobB.getDeadline()) {
-              return 1;
-            } else if (jobA.getDeadline() < jobB.getDeadline()) {
-              return -1;
-            } else {
-              return 0;
-            }
-          }
-        });
         long previousJobRuntime = 0;
         for (int i = 0; i < numJobs; i++) { // Preventing a potential NullPointerException if we
                                             // try to grab things from workQueue before
@@ -186,22 +131,7 @@ public class MyScheduler {
             } catch (Exception e) {
               // TODO: handle exception
             }
-          } else {
-            try {
-              Job notBitch = workQueue.take();
-              deadlinesQueue.put(notBitch);
-              previousJobRuntime = notBitch.getLength();
-
-            } catch (Exception e) {
-              // TODO: handle exception
-            }
           }
-          // if ((currentTime + deadlinesQueue.peek().getLength() +
-          // runningJob.getLength()) <= deadlinesQueue.peek().getDeadline()) {
-          // doneQueue.add(deadlinesQueue.remove());
-          // } else{
-          // bufferOfShame.add(deadlinesQueue.remove());
-          // }
         }
         for (Job heck : deadlinesQueue) {
           try {
@@ -254,6 +184,39 @@ public class MyScheduler {
     } catch (Exception e) {
       // TODO: handle exception
     }
+  }
+
+  /**
+   * @return
+   */
+  private PriorityBlockingQueue<Job> createWorkQueue() {
+    PriorityBlockingQueue<Job> workQueue;
+    if (property == "deadlines") {
+      workQueue = new PriorityBlockingQueue<>(numJobs / 4, new Comparator<Job>() {
+        public int compare(Job jobA, Job jobB) {
+          if (jobA.getDeadline() > jobB.getDeadline()) {
+            return 1;
+          } else if (jobA.getDeadline() < jobB.getDeadline()) {
+            return -1;
+          } else {
+            return 0;
+          }
+        }
+      });
+    } else {
+      workQueue = new PriorityBlockingQueue<>(numJobs / 4, new Comparator<Job>() {
+        public int compare(Job jobA, Job jobB) {
+          if (jobA.getLength() > jobB.getLength()) {
+            return 1;
+          } else if (jobA.getLength() < jobB.getLength()) {
+            return -1;
+          } else {
+            return 0;
+          }
+        }
+      });
+    }
+    return workQueue;
   }
 
   /**
