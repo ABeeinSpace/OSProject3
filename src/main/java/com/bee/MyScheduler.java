@@ -6,7 +6,6 @@ import java.util.Comparator;
 import java.util.Objects;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.PriorityBlockingQueue;
-import java.util.concurrent.Semaphore;
 
 /*
  *
@@ -183,7 +182,14 @@ public class MyScheduler {
            return Long.compare(jobA.getDeadline(), jobB.getDeadline());
         }
       });
-    } else {
+    } else if (Objects.equals(property, "combined")) {
+      workQueue = new PriorityBlockingQueue<>(numJobs, new Comparator<Job>() {
+        public int compare(Job jobA, Job jobB) {
+            return (Long.compare(jobA.getLength(), jobB.getLength()) + Long.compare(jobB.getWaitTime(), jobA.getWaitTime()));
+        }
+      });
+    }
+    else {
       workQueue = new PriorityBlockingQueue<>(numJobs, new Comparator<Job>() {
         public int compare(Job jobA, Job jobB) {
             return Long.compare(jobA.getLength(), jobB.getLength());
