@@ -25,7 +25,6 @@ public class MyScheduler {
   private final int numJobs;
   private final PriorityBlockingQueue<Job> workQueue;
   private final LinkedBlockingQueue<Job> doneQueue;
-  private final LinkedBlockingQueue<Job> bufferOfShame;
 
   /**
    * @param numJobs  The number of jobs we're going to use for this run
@@ -38,7 +37,6 @@ public class MyScheduler {
     this.outgoingQueue = new LinkedBlockingQueue<>(1);
     this.workQueue = createWorkQueue();
     this.doneQueue = new LinkedBlockingQueue<>(numJobs / 4);
-    this.bufferOfShame = new LinkedBlockingQueue<>(numJobs / 4);
     this.locker = new Semaphore(numJobs / 5);
   }
 
@@ -109,6 +107,7 @@ public class MyScheduler {
         // their deadline
         long previousJobRuntime = 0;
         long currentTime = 0;
+        LinkedBlockingQueue<Job> bufferOfShame = new LinkedBlockingQueue<>(numJobs / 4);
         for (int i = 0; i < numJobs; i++) {
           try {
             Job currentJob = workQueue.take();
