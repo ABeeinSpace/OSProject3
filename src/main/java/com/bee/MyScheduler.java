@@ -73,10 +73,7 @@ public class MyScheduler {
       case "avg wait":
         for (int i = 0; i < numJobs; i++) {
           try {
-            // locker.acquire();
-            // Job heck = workQueue.take();
             doneQueue.put(workQueue.take());
-            // locker.release();
           } catch (Exception e) {
             System.out.println("It broke!");
           }
@@ -181,7 +178,7 @@ public class MyScheduler {
    */
   private PriorityBlockingQueue<Job> createWorkQueue() {
     PriorityBlockingQueue<Job> workQueue;
-    if (property == "deadlines") {
+    if (Objects.equals(property, "deadlines")) {
       workQueue = new PriorityBlockingQueue<>(numJobs / 4, new Comparator<Job>() {
         public int compare(Job jobA, Job jobB) {
            return Long.compare(jobA.getDeadline(), jobB.getDeadline());
