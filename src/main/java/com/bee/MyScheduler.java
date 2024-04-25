@@ -185,7 +185,32 @@ public class MyScheduler {
     } else if (Objects.equals(property, "combined")) {
       workQueue = new PriorityBlockingQueue<>(numJobs, new Comparator<Job>() {
         public int compare(Job jobA, Job jobB) {
-            return (Long.compare(jobA.getLength(), jobB.getLength()) + Long.compare(jobB.getWaitTime(), jobA.getWaitTime()));
+          if (jobA.getTimeCreated() < jobB.getTimeCreated()) { // Job A arrived before Job B
+            if (jobA.getLength() < jobB.getLength()) { // Job A is shorter than Job B
+              return -1;
+            } else if (jobA.getLength() > jobB.getLength()) { // Job A is longer than Job B
+              return 1;
+            } else { // The jobs are the same length
+              return 0;
+            }
+          } else if (jobA.getTimeCreated() > jobB.getTimeCreated()) { // Job A arrived after Job B
+            if (jobA.getLength() < jobB.getLength()) { // Job A is shorter than Job B
+              return -1;
+            } else if (jobA.getLength() > jobB.getLength()) { // Job A is longer than Job B
+              return 1;
+            } else { // The jobs are the same length
+              return 0;
+            }
+          } else { // Job A and Job B were created at the same time.
+            if (jobA.getLength() < jobB.getLength()) { // Job A is shorter than Job B
+              return -1;
+            } else if (jobA.getLength() > jobB.getLength()) { // Job A is longer than Job B
+              return 1;
+            } else { // The jobs are the same length
+              return 0;
+            }
+          }
+            // return (Long.compare(jobA.getLength(), jobB.getLength()) + Long.compare(jobB.getWaitTime(), jobA.getWaitTime()));
         }
       });
     }
