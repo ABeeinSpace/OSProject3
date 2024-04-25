@@ -79,25 +79,11 @@ public class MyScheduler {
       case "combined":
       // Use more than just the length of the jobs to determine combined
         for (int i = 0; i < numJobs; i++) {
-          if (workQueue.size() == 1) {
-            // Use FCFS if there aren't multiple jobs in the queue to be processed
             try {
               doneQueue.put(this.workQueue.take());
             } catch (Exception e) {
               System.err.println("Failed to take from work Queue!!!");
             }
-          } else {
-            // Use SJF if there are multiple jobs in the queue waiting to be
-            // processed
-            // for (int j = 0; j < numJobs; j++) {
-              try {
-                Job heck = workQueue.take();
-                outgoingQueue.put(heck);
-              } catch (Exception e) {
-                System.out.println("It broke!");
-              }
-            // }
-          }
         }
         break;
 
