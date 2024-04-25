@@ -51,10 +51,10 @@ public class MyScheduler {
     Thread outgoingThread = new Thread(this::handleFinishedJobs);
 
     incomingThread.start();
-    outgoingThread.start();
 
     switch (this.property) {
       case "max wait":
+        outgoingThread.start();
         for (int i = 0; i < numJobs; i++) {
           try {
             // locker.acquire();
@@ -77,6 +77,7 @@ public class MyScheduler {
         break;
 
       case "combined":
+      outgoingThread.start();
       // Use more than just the length of the jobs to determine combined
         for (int i = 0; i < numJobs; i++) {
             try {
@@ -91,9 +92,12 @@ public class MyScheduler {
         // Burke hint for deadlines: Use a "buffer" for the jobs that wont make
         // their deadline
         long previousJobRuntime = 0;
-        long currentTime = 0;
+
+        int goodJobsCounter = 0;
+        int badJobsCounter = 0;
         LinkedBlockingQueue<Job> bufferOfShame = new LinkedBlockingQueue<>(numJobs / 4);
-        for (int i = 0; i < numJobs; i++) {
+        while ((goodJobsCounter + badJobsCounter) < numJobs) {
+          long currentTime = System.currentTimeMillis();
           try {
             Job currentJob = workQueue.take();
             if ((currentTime + currentJob.getLength() + previousJobRuntime) > currentJob.getDeadline()) {
@@ -102,13 +106,15 @@ public class MyScheduler {
               // locker.release();
               currentTime++;
               previousJobRuntime = 1;
+              badJobsCounter++;
             } else {
               // locker.acquire();
               outgoingQueue.put(currentJob);
               // locker.release();
-              currentTime += currentJob.getLength();
+              // currentTime += currentJob.getLength();
               previousJobRuntime = currentJob.getLength();
-            }
+              goodJobsCounter++;  
+          }
           } catch (Exception e) {
               System.out.println("It broke!");
           }
@@ -118,8 +124,7 @@ public class MyScheduler {
         // what they've done.
         for (Job job : bufferOfShame) {
           try {
-            Job heck = bufferOfShame.take();
-            outgoingQueue.put(heck);
+            outgoingQueue.put(bufferOfShame.take());
           } catch (Exception e) {
             System.out.println("It broke!");
           }
@@ -171,22 +176,10 @@ public class MyScheduler {
     } else if (Objects.equals(property, "combined")) {
       workQueue = new PriorityBlockingQueue<>(numJobs, new Comparator<Job>() {
         public int compare(Job jobA, Job jobB) {
-          if (jobA.getTimeCreated() < jobB.getTimeCreated()) { // Job A arrived before Job B
-            if (jobA.getLength() < jobB.getLength()) { // Job A is shorter than Job B
-              return -1;
-            } else if (jobA.getLength() > jobB.getLength()) { // Job A is longer than Job B
-              return 1;
-            } else { // The jobs are the same length
-              return 0;
-            }
-          } else if (jobA.getTimeCreated() > jobB.getTimeCreated()) { // Job A arrived after Job B
-            if (jobA.getLength() < jobB.getLength()) { // Job A is shorter than Job B
-              return -1;
-            } else if (jobA.getLength() > jobB.getLength()) { // Job A is longer than Job B
-              return 1;
-            } else { // The jobs are the same length
-              return 0;
-            }
+          if (jobA.getWaitTime() < jobB.getWaitTime()) { // Job A arrived before Job B
+            return -1;
+          } else if (jobA.getWaitTime() > jobB.getWaitTime()) { // Job A arrived after Job B
+            return 1;
           } else { // Job A and Job B were created at the same time.
             if (jobA.getLength() < jobB.getLength()) { // Job A is shorter than Job B
               return -1;
