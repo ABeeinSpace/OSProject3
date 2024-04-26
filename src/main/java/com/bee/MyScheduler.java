@@ -104,7 +104,6 @@ public class MyScheduler {
               // locker.acquire();
               bufferOfShame.put(currentJob);
               // locker.release();
-              currentTime++;
               previousJobRuntime = 1;
               badJobsCounter++;
             } else {
